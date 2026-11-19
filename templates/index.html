@@ -1,0 +1,2031 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>钥盾 KeyShield · 校园 AI 密钥安全管理平台</title>
+<style>
+:root{
+  --bg:#0a0f1c; --bg2:#0e1526; --card:#121a2e;
+  --line:#1f2b45; --line2:#2a3a5e;
+  --txt:#e6edf7; --txt2:#8fa3c0; --txt3:#5c6f92;
+  --accent:#22d3a7; --accent2:#34e0ba; --accentDim:#22d3a722;
+  --gold:#f5b73d; --red:#f26d6d;
+  --radius:14px;
+  --font:"Segoe UI","Microsoft YaHei","PingFang SC",system-ui,sans-serif;
+  --mono:"Consolas","JetBrains Mono","Courier New",monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--txt);font-family:var(--font);min-height:100vh;font-size:15px}
+body::before{content:"";position:fixed;inset:0;background:
+  radial-gradient(900px 480px at 85% -10%,#12304a66,transparent 60%),
+  radial-gradient(700px 420px at -10% 110%,#0d3a3355,transparent 60%);
+  pointer-events:none;z-index:0}
+#app{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:20px 22px 80px}
+.hidden{display:none!important}
+button{font-family:var(--font);cursor:pointer;border:none;outline:none}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:10px;font-size:14.5px;
+  background:var(--accentDim);color:var(--accent2);border:1px solid #22d3a744;transition:.18s;font-weight:600}
+.btn:hover{background:#22d3a733;transform:translateY(-1px)}
+.btn.gold{background:#f5b73d1c;color:var(--gold);border-color:#f5b73d44}
+.btn.danger{background:#f26d6d17;color:#f28989;border-color:#f26d6d44}
+.btn.ghost{background:transparent;color:var(--txt2);border-color:var(--line2)}
+.btn.ghost:hover{color:var(--txt);background:#ffffff08}
+.btn.sm{padding:5px 11px;font-size:12.5px;border-radius:8px;font-weight:500}
+input,select,textarea{font-family:var(--font);background:var(--bg2);border:1px solid var(--line2);color:var(--txt);
+  border-radius:10px;padding:10px 13px;font-size:14.5px;outline:none;transition:.15s;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px #22d3a71c}
+input::placeholder,textarea::placeholder{color:var(--txt3)}
+/* 登录/注册 */
+.lock-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;padding:20px;overflow:hidden}
+.lock-wrap::before{content:"";position:absolute;width:520px;height:520px;border-radius:50%;
+  background:radial-gradient(circle,#22d3a71d,transparent 65%);top:-160px;right:-120px;animation:float1 9s ease-in-out infinite}
+.lock-wrap::after{content:"";position:absolute;width:430px;height:430px;border-radius:50%;
+  background:radial-gradient(circle,#5aa7ff14,transparent 65%);bottom:-140px;left:-100px;animation:float2 11s ease-in-out infinite}
+@keyframes float1{0%,100%{transform:translate(0,0)}50%{transform:translate(-30px,26px)}}
+@keyframes float2{0%,100%{transform:translate(0,0)}50%{transform:translate(26px,-20px)}}
+.lock-card{width:420px;max-width:100%;background:linear-gradient(180deg,#111c33,#0c1424);
+  border:1px solid var(--line2);border-radius:22px;padding:40px 36px 32px;text-align:center;position:relative;
+  box-shadow:0 30px 90px #00000090, 0 0 0 1px #22d3a70d inset, 0 0 46px #22d3a712;}
+.lock-card::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:180px;height:1px;
+  background:linear-gradient(90deg,transparent,#22d3a766,transparent)}
+.logo-shield{width:80px;height:80px;margin:0 auto 16px;filter:drop-shadow(0 0 22px #22d3a66)}
+.lock-title{font-size:27px;font-weight:800;letter-spacing:1.5px}
+.lock-title em{color:var(--accent2);font-style:normal}
+.lock-sub{color:var(--txt3);font-size:12.5px;margin:10px 0 4px;line-height:1.8;letter-spacing:1px}
+.lock-sub b{color:var(--accent2);font-weight:600}
+/* tab 切换 */
+.auth-tabs{display:flex;background:#0a101f;border:1px solid var(--line);border-radius:12px;padding:4px;margin:22px 0 18px}
+.auth-tab{flex:1;padding:10px 0;border-radius:9px;font-size:14.5px;font-weight:600;color:var(--txt3);background:transparent;transition:.2s}
+.auth-tab.on{background:linear-gradient(135deg,#22d3a72d,#22d3a71a);color:var(--accent2);box-shadow:0 0 0 1px #22d3a755 inset}
+/* 输入框带图标 */
+.pwd-row{position:relative;margin-bottom:12px;text-align:left}
+.pwd-row .ficon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:15px;opacity:.65;pointer-events:none}
+.pwd-row input{padding-left:42px;font-size:15px;letter-spacing:.5px;text-align:left}
+.pwd-row input:focus{border-color:var(--accent);box-shadow:0 0 0 3px #22d3a71c}
+.pwd-row.is-code input{padding-right:118px}
+.get-code{position:absolute;right:5px;top:50%;transform:translateY(-50%);background:var(--accentDim);color:var(--accent2);
+  border:1px solid #22d3a744;border-radius:8px;padding:6px 12px;font-size:12.5px;font-weight:600;transition:.18s}
+.get-code:hover{background:#22d3a733}
+.get-code:disabled{opacity:.45;cursor:not-allowed}
+.lock-card .btn{width:100%;justify-content:center;padding:13px;font-size:15.5px;margin-top:6px;
+  background:linear-gradient(135deg,#1fd4a8,#17a98a);color:#04120d;border:none;font-weight:800;letter-spacing:2px;
+  box-shadow:0 10px 28px #22d3a740}
+.lock-card .btn:hover{transform:translateY(-1px);box-shadow:0 14px 34px #22d3a755}
+.lock-card .btn:active{transform:translateY(0)}
+.lock-err{color:#f28989;font-size:13px;margin-top:10px;min-height:18px;text-align:center}
+.lock-switch{margin-top:16px;font-size:13px;color:var(--txt3);display:flex;gap:8px;align-items:center;justify-content:center}
+.lock-switch a{color:var(--accent2);cursor:pointer;text-decoration:underline dotted;font-weight:600}
+.hint-line{font-size:11.5px;color:var(--txt3);line-height:1.9;margin-top:16px}
+.hint-line b{color:var(--accent2)}
+.auth-link{border:0;background:transparent;color:inherit;font:inherit;cursor:pointer;padding:2px 4px}.auth-link:hover{color:var(--accent);text-decoration:underline}
+.demo-code-tip{font-size:12px;color:var(--gold);background:#f5b73d12;border:1px dashed #f5b73d44;border-radius:8px;padding:7px 10px;margin-top:10px;display:none}
+/* 顶栏 */
+header{display:flex;align-items:center;gap:14px;padding:14px 0 18px;flex-wrap:wrap}
+.h-logo{display:flex;align-items:center;gap:11px;margin-right:auto}
+.h-logo svg{width:36px;height:36px;filter:drop-shadow(0 0 10px #22d3a4d)}
+.h-name{font-size:19.5px;font-weight:800;letter-spacing:.5px}
+.h-name em{color:var(--accent2);font-style:normal}
+.h-tag{display:block;font-size:11px;color:var(--txt3);font-weight:400;letter-spacing:2px}
+.h-user{font-size:13px;color:var(--txt2);background:#ffffff0a;border:1px solid var(--line);padding:6px 12px;border-radius:9px;display:flex;gap:7px;align-items:center}
+.h-user .role{color:var(--gold);font-size:11.5px;border:1px solid #f5b73d55;border-radius:5px;padding:1px 6px}
+.h-actions{display:flex;gap:8px}
+nav{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:5px;margin-bottom:22px;flex-wrap:wrap}
+.tab{padding:9px 18px;border-radius:9px;color:var(--txt2);font-size:14.5px;font-weight:600;background:transparent;transition:.15s}
+.tab:hover{color:var(--txt)}
+.tab.on{background:var(--accentDim);color:var(--accent2)}
+.tab .cnt{font-size:11.5px;background:#ffffff14;border-radius:20px;padding:1px 7px;margin-left:6px;color:var(--txt2)}
+/* 卡片 */
+.card{background:linear-gradient(180deg,var(--card),#10182b);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.grid-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:22px}
+.stat{background:linear-gradient(180deg,var(--card),#10182b);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;position:relative;overflow:hidden}
+.stat::after{content:"";position:absolute;right:-18px;top:-18px;width:76px;height:76px;border-radius:50%;background:#22d3a70f}
+.stat .k{font-size:12.5px;color:var(--txt3);letter-spacing:1px}
+.stat .v{font-size:27px;font-weight:800;margin-top:5px;color:var(--accent2)}
+.stat .v.warn{color:var(--gold)}
+.stat .s{font-size:12px;color:var(--txt3);margin-top:3px}
+section h3{font-size:15.5px;font-weight:700;margin-bottom:14px}
+section h3 .sub{font-weight:400;font-size:12.5px;color:var(--txt3);margin-left:8px}
+/* 密钥列表 */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.toolbar .search{flex:1;min-width:220px;position:relative}
+.toolbar .search span{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--txt3);font-size:14px}
+.toolbar .search input{padding-left:34px}
+.chip-filters{display:flex;gap:7px;flex-wrap:wrap}
+.chip{padding:5px 13px;border-radius:20px;font-size:12.5px;background:#ffffff08;border:1px solid var(--line);color:var(--txt2);cursor:pointer;transition:.15s}
+.chip.on{background:var(--accentDim);color:var(--accent2);border-color:#22d3a755;font-weight:600}
+.klist{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.kcard{background:linear-gradient(180deg,var(--card),#10182b);border:1px solid var(--line);border-radius:var(--radius);padding:16px 17px;transition:.18s}
+.kcard:hover{border-color:var(--line2);transform:translateY(-2px);box-shadow:0 10px 30px #00000050}
+.kcard .top{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.kcard .ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;background:#22d3a714;border:1px solid #22d3a733}
+.kcard .nm{font-size:15px;font-weight:700}
+.kcard .cat{font-size:11px;color:var(--txt3);background:#ffffff0c;padding:2px 8px;border-radius:6px;margin-left:6px}
+.kcard .val{font-family:var(--mono);font-size:13px;color:var(--txt2);background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:7px 10px;letter-spacing:.5px;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:11px}
+.kcard .val .m{display:flex;gap:4px}
+.kcard .val button{background:#ffffff0b;color:var(--txt2);border-radius:6px;border:1px solid var(--line);padding:3px 8px;font-size:12px}
+.kcard .val button:hover{color:var(--accent2);border-color:#22d3a755}
+.kcard .val button.show{color:var(--accent2)}
+.kcard .meta{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--txt3);flex-wrap:wrap}
+.kcard .meta .exp{border-radius:6px;padding:2px 8px;font-size:11.5px}
+.kcard .meta .exp.ok{background:#22d3a714;color:var(--accent2)}
+.kcard .meta .exp.warn{background:#f5b73d1a;color:var(--gold)}
+.kcard .meta .exp.alert{background:#f26d6d1a;color:#f28989}
+.kcard .ops{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.empty{grid-column:1/-1;text-align:center;padding:56px 20px;color:var(--txt3);border:1px dashed var(--line2);border-radius:var(--radius)}
+.empty .big{font-size:40px;margin-bottom:10px}
+/* 表格 */
+.tbl-wrap{overflow:auto;border:1px solid var(--line);border-radius:var(--radius)}
+table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:640px}
+th{background:var(--bg2);color:var(--txt3);text-align:left;padding:11px 14px;font-size:12px;letter-spacing:1px;font-weight:600;border-bottom:1px solid var(--line)}
+td{padding:11px 14px;border-bottom:1px solid var(--line);color:var(--txt2)}
+tr:hover td{background:#ffffff05;color:var(--txt)}
+td .action{color:var(--accent2);font-weight:600}
+.log-action{color:var(--accent2);font-weight:600}.log-action.is-rotate{color:#1769e0}.log-action.is-team-rotate{color:#c88700}.log-action.is-delete{color:#d14343}
+/* 模态 */
+.mask{position:fixed;inset:0;background:#05080fcc;backdrop-filter:blur(4px);z-index:50;display:flex;align-items:center;justify-content:center;padding:18px}
+.modal{background:linear-gradient(180deg,#131c31,#0e1526);border:1px solid var(--line2);border-radius:16px;width:520px;max-width:100%;max-height:88vh;overflow:auto;padding:26px;box-shadow:0 30px 90px #000000a0;animation:pop .18s ease}
+@keyframes pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+.modal h3{font-size:17px;margin-bottom:18px}
+.modal .f{margin-bottom:14px}
+.modal .f label{display:block;font-size:12.5px;color:var(--txt3);margin-bottom:6px}
+.modal .frow{display:flex;gap:12px}
+.modal .frow>*{flex:1}
+/* 下发方式切换卡片 */
+.ftoggle{display:flex;gap:10px}
+.toggle-opt{flex:1;cursor:pointer}
+.toggle-opt input{display:none}
+.toggle-card{display:block;border:1px solid var(--line2);border-radius:11px;padding:11px 13px;font-size:13.5px;line-height:1.7;transition:.18s;text-align:center;color:var(--txt2)}
+.toggle-card small{color:var(--txt3);font-size:11.5px;display:block;margin-top:2px}
+.toggle-opt input:checked + .toggle-card{border-color:var(--accent);background:var(--accentDim);color:var(--txt)}
+.toggle-opt:hover .toggle-card{border-color:var(--line2);transform:translateY(-1px)}
+.modal .actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}
+.modal .big-val{font-family:var(--mono);font-size:13.5px;background:var(--bg2);border:1px solid #22d3a744;border-radius:10px;padding:14px;word-break:break-all;color:#d7f5ec;margin:6px 0 14px}
+/* toast */
+#toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);z-index:99;display:flex;flex-direction:column;gap:8px;align-items:center}
+.toast-item{background:#13203a;border:1px solid #22d3a755;color:var(--txt);padding:11px 22px;border-radius:11px;font-size:13.5px;box-shadow:0 12px 40px #00000090;animation:pop .2s ease;display:flex;gap:9px;align-items:center}
+.toast-item::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent2)}
+.toast-item.warn{border-color:#f5b73d66}
+.toast-item.warn::before{background:var(--gold)}
+.toast-item.err{border-color:#f26d6d66}
+.toast-item.err::before{background:var(--red)}
+.fadeout{opacity:0;transition:.4s}
+.sec-note{background:#22d3a70d;border:1px solid #22d3a722;border-radius:11px;padding:13px 16px;font-size:13px;color:var(--txt2);line-height:1.8;margin-bottom:18px}
+.sec-note b{color:var(--accent2)}
+footer{text-align:center;color:var(--txt3);font-size:12px;padding:30px 0 10px}
+/* 官网首页：借鉴现代安全产品的信息节奏，视觉与内容均为钥盾原创 */
+.landing{background:#f6f8fc;color:#17223b;min-height:100vh;overflow:hidden;position:relative}
+.landing::before{content:"";position:absolute;width:760px;height:760px;border-radius:50%;right:-300px;top:-300px;background:radial-gradient(circle,#bfe7ff 0,#dcecff88 42%,transparent 70%)}
+.site-nav{height:76px;max-width:1220px;margin:auto;padding:0 28px;display:flex;align-items:center;gap:28px;position:relative;z-index:4}
+.brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:20px;letter-spacing:-.5px;color:#13223d}
+.brand-mark{width:36px;height:36px;border-radius:11px;background:#1769e0;color:white;display:grid;place-items:center;box-shadow:0 8px 22px #1769e033}
+.brand small{display:block;font-size:10px;color:#6d7890;font-weight:600;letter-spacing:1.3px}
+.site-nav .site-links{display:flex;gap:26px;margin:0 0 0 auto;padding:0;background:transparent;border:0;border-radius:0;flex-wrap:nowrap}.site-links a{color:#536078;text-decoration:none;font-size:14px;font-weight:650}.site-links a:hover{color:#1769e0}
+.nav-actions{display:flex;gap:9px}.land-btn{border-radius:10px;padding:10px 17px;font-size:14px;font-weight:750;background:white;color:#17223b;border:1px solid #d8dfeb;transition:.2s}
+.land-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px #233c6620}.land-btn.primary{background:#1769e0;color:white;border-color:#1769e0}
+.hero{max-width:1220px;margin:0 auto;padding:74px 28px 92px;display:grid;grid-template-columns:minmax(0,1.15fr) 430px;gap:72px;align-items:center;position:relative;z-index:2}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;padding:7px 11px;border-radius:99px;background:#e6f1ff;border:1px solid #c5ddff;color:#1769e0;font-size:12px;font-weight:800;letter-spacing:.6px}
+.hero-copy h1{font-size:clamp(43px,5.2vw,70px);line-height:1.04;letter-spacing:-3.6px;margin:22px 0;color:#14213b;max-width:750px}
+.hero-copy h1 span{color:#1769e0}.hero-copy>p{font-size:19px;line-height:1.75;color:#5b6880;max-width:670px}
+.hero-points{display:flex;gap:21px;flex-wrap:wrap;margin-top:27px;color:#33415d;font-size:13px;font-weight:700}.hero-points span::before{content:"✓";color:#087f5b;margin-right:7px;font-weight:900}
+.auth-shell{position:relative}.auth-shell::before{content:"";position:absolute;inset:18px -18px -18px 18px;border-radius:25px;background:#1769e01a;transform:rotate(3deg)}
+.landing .lock-card{width:100%;padding:31px 31px 27px;text-align:left;background:#fff;border:1px solid #dce3ee;border-radius:22px;box-shadow:0 28px 70px #203b6a1e;position:relative;color:#17223b}
+.landing .lock-card::before{display:none}.landing .logo-shield{display:none}.landing .lock-title{font-size:22px;letter-spacing:-.5px}.landing .lock-title em{color:#1769e0}
+.landing .lock-sub{color:#718099;margin:5px 0 18px;letter-spacing:0;font-size:12px}.landing .lock-sub b{color:#40516c}
+.landing .auth-tabs{margin:0 0 16px;background:#f1f4f9;border-color:#e0e6ef}.landing .auth-tab{color:#77849a}.landing .auth-tab.on{background:white;color:#1769e0;box-shadow:0 2px 8px #1c3e7014}
+.landing input{background:#f8fafc;border-color:#dbe2ec;color:#17223b}.landing input:focus{border-color:#1769e0;box-shadow:0 0 0 3px #1769e015}.landing input::placeholder{color:#9aa5b6}
+.landing .get-code{background:#eaf2ff;color:#1769e0;border-color:#cbdfff}.landing .lock-card .btn{background:#1769e0;color:white;box-shadow:0 10px 22px #1769e02b;letter-spacing:.5px}
+.landing .hint-line{color:#8490a3;text-align:center}.landing .hint-line b{color:#1769e0}
+.trustbar{background:#fff;border-top:1px solid #e6eaf1;border-bottom:1px solid #e6eaf1}.trust-inner{max-width:1164px;margin:auto;padding:24px 28px;display:flex;align-items:center;justify-content:space-between;gap:24px;color:#718099;font-size:13px;font-weight:700}.trust-items{display:flex;gap:20px;flex-wrap:wrap;color:#33415d}.trust-items a{color:inherit;text-decoration:none;padding:7px 12px;border-radius:999px;transition:.2s}.trust-items a:hover,.trust-items a:focus-visible{color:#1769e0;background:#eaf2ff;outline:none}
+.market-section{padding:96px 28px}.market-inner{max-width:1164px;margin:auto}.section-kicker{font-size:12px;color:#1769e0;font-weight:850;letter-spacing:1.6px;text-transform:uppercase}.section-title{font-size:clamp(32px,4vw,50px);letter-spacing:-2px;line-height:1.12;margin:12px 0 18px;color:#17223b}.section-lead{color:#65728a;font-size:17px;line-height:1.75;max-width:720px}
+.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:46px}.feature-card{background:white;border:1px solid #e0e5ee;border-radius:18px;padding:28px;min-height:245px;box-shadow:0 12px 32px #1e37600a}.feature-icon{width:44px;height:44px;border-radius:12px;background:#eaf2ff;color:#1769e0;display:grid;place-items:center;font-size:20px;margin-bottom:28px}.feature-card h3{font-size:19px;margin-bottom:10px}.feature-card p{font-size:14px;color:#6c7890;line-height:1.75}
+.security-band{background:#14213b;color:white}.security-band .section-title{color:white}.security-band .section-kicker{color:#78b8ff}.security-band .section-lead{color:#aebbd0}.security-flow{margin-top:44px;display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #ffffff1f;border-radius:18px;overflow:hidden}.flow-step{padding:27px;border-right:1px solid #ffffff1f}.flow-step:last-child{border:0}.flow-step b{display:block;color:#78b8ff;font-size:12px;margin-bottom:10px}.flow-step strong{font-size:17px}.flow-step p{color:#aebbd0;font-size:13px;line-height:1.7;margin-top:8px}
+.plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:42px}.plan-card{background:white;border:1px solid #e0e5ee;border-radius:20px;padding:30px;position:relative;display:flex;flex-direction:column}.plan-card.featured{border:2px solid #1769e0;box-shadow:0 18px 48px #1769e018}.plan-label{font-size:12px;font-weight:850;color:#1769e0}.plan-card h3{font-size:25px;margin:9px 0}.plan-card p{color:#718099;line-height:1.65;font-size:14px;min-height:48px}.plan-card ul{list-style:none;margin:22px 0 26px;display:grid;gap:11px;color:#394861;font-size:14px}.plan-card li::before{content:"✓";color:#087f5b;font-weight:900;margin-right:8px}.plan-login-link{display:inline-flex;align-items:center;justify-content:space-between;margin-top:auto;padding:12px 14px;border-radius:12px;background:#edf4ff;color:#1769e0;text-decoration:none;font-size:13px;font-weight:850;transition:.2s}.plan-login-link:hover,.plan-login-link:focus-visible{background:#1769e0;color:#fff;transform:translateY(-1px);outline:none}
+.final-cta{margin:0 28px 70px;border-radius:28px;background:linear-gradient(120deg,#1769e0,#114ea9);color:white;text-align:center;padding:72px 24px;position:relative;overflow:hidden}.final-cta h2{font-size:clamp(31px,4vw,48px);letter-spacing:-1.8px;margin-bottom:15px}.final-cta p{color:#dbe9ff;margin-bottom:27px}.final-cta .land-btn{padding:13px 24px}
+.land-footer{padding:26px;text-align:center;color:#8490a3;font-size:12px}
+/* 动态体验：克制的视差、滚动入场和安全链路流光 */
+.landing{--pointer-x:0px;--pointer-y:0px}.landing::before{transform:translate(var(--pointer-x),var(--pointer-y));animation:ambientGlow 10s ease-in-out infinite;transition:transform .35s ease-out}
+.site-nav{position:sticky;top:0;z-index:40;background:#f6f8fcd9;backdrop-filter:blur(18px) saturate(150%);border-bottom:1px solid transparent;transition:.25s}.site-nav.scrolled{border-bottom-color:#dfe6f0;box-shadow:0 10px 30px #233c660b}
+.brand-mark{position:relative}.brand-mark::after{content:"";position:absolute;inset:-5px;border:1px solid #1769e055;border-radius:15px;animation:brandPulse 2.8s ease-out infinite}
+.land-btn{position:relative;overflow:hidden;isolation:isolate}.land-btn::after{content:"";position:absolute;inset:-2px;transform:translateX(-130%) skewX(-20deg);background:linear-gradient(90deg,transparent,#ffffff88,transparent);transition:transform .65s;z-index:-1}.land-btn:hover::after{transform:translateX(130%) skewX(-20deg)}
+.hero-copy>*{animation:heroRise .75s cubic-bezier(.2,.8,.2,1) both}.hero-copy>h1{animation-delay:.08s}.hero-copy>p{animation-delay:.16s}.hero-copy>.hero-points{animation-delay:.24s}
+.auth-shell{transform:translate3d(var(--card-x,0px),var(--card-y,0px),0);transition:transform .25s ease-out;animation:heroRise .85s .18s cubic-bezier(.2,.8,.2,1) both}.auth-shell::before{animation:cardFloat 5s ease-in-out infinite}
+.feature-card{transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s,border-color .35s}.feature-card:hover{transform:translateY(-9px);box-shadow:0 25px 55px #1e4b9020;border-color:#bcd5f8}.feature-icon{transition:.35s}.feature-card:hover .feature-icon{transform:rotate(-7deg) scale(1.1);background:#1769e0;color:white}
+.security-flow{position:relative}.security-flow::after{content:"";position:absolute;left:0;top:0;width:34%;height:1px;background:linear-gradient(90deg,transparent,#78b8ff,transparent);animation:flowScan 4s linear infinite}.flow-step{transition:.3s}.flow-step:hover{background:#ffffff08}
+.plan-card{transition:transform .35s,box-shadow .35s}.plan-card:hover{transform:translateY(-7px);box-shadow:0 22px 52px #1e376016}.plan-card.featured::before{content:"";position:absolute;inset:-2px;border:2px solid #1769e0;border-radius:20px;animation:featuredPulse 2.6s ease-out infinite;pointer-events:none}
+.final-cta::before,.final-cta::after{content:"";position:absolute;width:310px;height:310px;border-radius:50%;background:#ffffff0d;animation:ctaOrb 8s ease-in-out infinite}.final-cta::before{left:-100px;top:-180px}.final-cta::after{right:-120px;bottom:-210px;animation-delay:-4s}.final-cta h2,.final-cta p,.final-cta button{position:relative;z-index:1}
+.scroll-progress{position:fixed;left:0;top:0;height:3px;width:var(--progress,0%);background:linear-gradient(90deg,#1769e0,#56b8ff);z-index:100;box-shadow:0 0 12px #1769e088;pointer-events:none}
+.js-reveal{opacity:0;transform:translateY(32px);transition:opacity .75s cubic-bezier(.2,.8,.2,1),transform .75s cubic-bezier(.2,.8,.2,1);transition-delay:var(--delay,0ms)}.js-reveal.in-view{opacity:1;transform:none}
+/* 登录后的服务空间选择 */
+.workspace-screen{min-height:100vh;background:radial-gradient(800px 500px at 80% 0,#dcecff 0,transparent 70%),#f6f8fc;color:#17223b;padding:28px;display:flex;flex-direction:column}
+.ws-top{max-width:1120px;width:100%;margin:0 auto;display:flex;align-items:center;justify-content:space-between}.ws-top .brand-mark{display:inline-grid;margin-right:9px}.ws-back{background:white;border:1px solid #dce3ed;border-radius:10px;padding:9px 14px;color:#59677e;font-weight:700}
+.ws-content{max-width:1120px;width:100%;margin:auto;padding:65px 0 90px}.ws-kicker{color:#1769e0;font-size:12px;font-weight:850;letter-spacing:1.5px}.ws-content h1{font-size:clamp(37px,5vw,58px);line-height:1.08;letter-spacing:-2.8px;margin:13px 0}.ws-lead{color:#68758b;font-size:17px;line-height:1.7;max-width:650px}
+.ws-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:42px}.ws-card{background:#fff;border:1px solid #dfe5ef;border-radius:22px;padding:28px;text-align:left;min-height:320px;position:relative;transition:.3s;overflow:hidden}.ws-card::after{content:"";position:absolute;width:150px;height:150px;border-radius:50%;right:-70px;top:-70px;background:var(--ws-glow,#eaf2ff);transition:.3s}.ws-card:hover{transform:translateY(-8px);border-color:#a9c9f8;box-shadow:0 25px 60px #25497918}.ws-card:hover::after{scale:1.25}.ws-card.locked{opacity:.58;cursor:not-allowed}.ws-card.locked:hover{transform:none;box-shadow:none;border-color:#dfe5ef}.ws-icon{width:48px;height:48px;border-radius:14px;background:#eaf2ff;color:#1769e0;display:grid;place-items:center;font-size:22px;margin-bottom:28px}.ws-card h2{font-size:24px;margin-bottom:9px}.ws-card p{color:#718099;font-size:14px;line-height:1.7;min-height:72px}.ws-card ul{list-style:none;margin:22px 0;display:grid;gap:8px;color:#3f4e67;font-size:13px}.ws-card li::before{content:"✓";color:#087f5b;font-weight:900;margin-right:8px}.ws-enter{display:flex;align-items:center;justify-content:space-between;color:#1769e0;font-weight:800;font-size:14px;margin-top:auto}.ws-role-tip{font-size:11px;color:#8b97aa;background:#f0f3f7;padding:5px 8px;border-radius:6px}
+/* 校园组织购买与订阅 */
+.purchase-screen{min-height:100vh;background:radial-gradient(760px 500px at 88% 0,#dbeaff 0,transparent 72%),#f6f8fc;color:#17223b;padding:28px}.purchase-wrap{max-width:1120px;margin:0 auto}.purchase-top{display:flex;align-items:center;justify-content:space-between}.purchase-back{background:#fff;border:1px solid #dce3ed;border-radius:10px;padding:9px 14px;color:#59677e;font-weight:750}.purchase-hero{padding:72px 0 30px;max-width:790px}.purchase-kicker{color:#1769e0;font-size:12px;font-weight:850;letter-spacing:1.5px}.purchase-hero h1{font-size:clamp(38px,5vw,60px);line-height:1.08;letter-spacing:-2.9px;margin:13px 0 16px}.purchase-hero p{font-size:17px;color:#68758b;line-height:1.75}.purchase-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.purchase-plan{background:#fff;border:1px solid #dfe5ef;border-radius:22px;padding:30px;text-align:left;min-height:335px;position:relative;transition:.25s;box-shadow:0 14px 38px #2945680a}.purchase-plan:hover{transform:translateY(-5px);border-color:#b8d1f5;box-shadow:0 24px 55px #25497916}.purchase-plan.selected{border:2px solid #1769e0;padding:29px;box-shadow:0 22px 55px #1769e01d}.purchase-plan.selected::after{content:"已选择";position:absolute;right:22px;top:22px;background:#1769e0;color:#fff;border-radius:99px;padding:6px 10px;font-size:11px;font-weight:850}.purchase-plan-icon{width:50px;height:50px;border-radius:15px;background:#eaf2ff;color:#1769e0;display:grid;place-items:center;font-size:23px;margin-bottom:26px}.purchase-plan-tag{font-size:11px;color:#1769e0;font-weight:850;letter-spacing:1.2px}.purchase-plan h2{font-size:26px;margin:8px 0 10px}.purchase-plan p{color:#718099;line-height:1.7;font-size:14px;min-height:48px}.purchase-plan ul{list-style:none;margin-top:23px;display:grid;gap:11px;color:#40506a;font-size:14px}.purchase-plan li::before{content:"✓";color:#087f5b;font-weight:900;margin-right:9px}.purchase-checkout{margin:25px 0 72px;background:linear-gradient(135deg,#fff,#f4f8ff);border:1px solid #dbe4f0;border-radius:22px;padding:30px;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(260px,.7fr);gap:28px;box-shadow:0 16px 42px #2945680d}.subscription-badge{display:inline-flex;align-items:center;border-radius:99px;padding:7px 11px;background:#edf1f6;color:#69768b;font-size:12px;font-weight:800}.subscription-badge.active{background:#e6f7f1;color:#087f5b}.purchase-action h2{font-size:23px;margin:13px 0 8px}.purchase-action p{color:#6d7990;line-height:1.7;font-size:14px}.purchase-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}.purchase-primary,.purchase-secondary{display:inline-flex;align-items:center;justify-content:center;border-radius:10px;padding:11px 17px;font-size:14px;font-weight:800;text-decoration:none}.purchase-primary{background:#1769e0;color:#fff;border:1px solid #1769e0;box-shadow:0 8px 20px #1769e025}.purchase-primary:hover{background:#105cc8}.purchase-secondary{background:#fff;color:#53637b;border:1px solid #d4ddea}.contact-card{background:#fff;border:1px solid #dce4ef;border-radius:16px;padding:21px}.contact-card b{display:block;font-size:15px;margin-bottom:8px}.contact-card p{font-size:13px;color:#78859a;line-height:1.65;margin-bottom:12px}.contact-card a{color:#1769e0;font-weight:800;text-decoration:none;overflow-wrap:anywhere}.purchase-note{font-size:12px;color:#8a96a8;margin-top:13px;line-height:1.6}
+/* 空间化业务后台 */
+.workspace-badge{display:flex;align-items:center;gap:7px;background:#1769e018;border:1px solid #4d91ea55;color:#79b6ff;border-radius:9px;padding:6px 10px;font-size:12px;font-weight:700}.workspace-badge button{background:transparent;color:#8fa3c0;font-size:11px;text-decoration:underline}
+.biz-hero{border:1px solid var(--line);border-radius:18px;padding:25px;margin-bottom:20px;display:grid;grid-template-columns:1.4fr 1fr;gap:25px;position:relative;overflow:hidden;background:linear-gradient(135deg,#13213a,#10192d)}.biz-hero::after{content:"";position:absolute;width:240px;height:240px;border-radius:50%;right:-90px;top:-130px;background:var(--space-color,#22d3a7);opacity:.1}.biz-kicker{font-size:11px;color:var(--space-color,#22d3a7);font-weight:800;letter-spacing:1.4px}.biz-hero h2{font-size:25px;margin:8px 0 9px}.biz-hero p{color:var(--txt2);font-size:13px;line-height:1.8;max-width:620px}.biz-actions{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}.biz-health{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:center;position:relative;z-index:1}.health-item{background:#ffffff08;border:1px solid #ffffff0f;border-radius:11px;padding:13px}.health-item b{font-size:18px;color:var(--space-color,#22d3a7);display:block}.health-item span{font-size:11px;color:var(--txt3)}
+/* 浅色业务后台：与产品官网统一视觉语言 */
+#mainScreen{min-height:100vh;background:radial-gradient(900px 520px at 92% -8%,#dcebff 0,transparent 68%),#f5f7fb;color:#17223b;
+  --bg:#f5f7fb;--bg2:#eef3f9;--card:#fff;--line:#dfe5ee;--line2:#cbd5e3;
+  --txt:#17223b;--txt2:#5f6d84;--txt3:#8491a6;--accent:#1769e0;--accent2:#1769e0;--accentDim:#1769e014}
+#mainScreen #app{max-width:1280px;padding-top:16px}
+#mainScreen header{padding:11px 4px 17px}.h-logo svg{filter:drop-shadow(0 5px 10px #1769e026)}
+#mainScreen .h-name em{color:#1769e0}.h-tag{color:#8290a5}.h-user{background:#fff;border-color:#dce3ed;color:#526078;box-shadow:0 4px 14px #1d37600b}.h-user .role{color:#a96500;border-color:#e4b55d;background:#fff8e9}
+#mainScreen .workspace-badge{background:#eaf2ff;border-color:#c7dcfa;color:#1769e0}.workspace-badge button{color:#657895}
+#mainScreen nav{background:#fff;border-color:#dfe5ee;box-shadow:0 8px 24px #2945680a;padding:6px}.tab{color:#68758a}.tab:hover{color:#1769e0;background:#f4f7fb}.tab.on{background:#1769e0;color:#fff;box-shadow:0 7px 17px #1769e028}.tab.on .cnt{background:#ffffff2b;color:#fff}.tab .cnt{background:#edf1f6;color:#728096}
+#mainScreen .btn{background:#1769e0;color:#fff;border-color:#1769e0;box-shadow:0 6px 15px #1769e01b}.btn:hover{background:#105cc8}.btn.ghost{background:#fff;color:#5b6980;border-color:#d4dce8;box-shadow:none}.btn.ghost:hover{background:#f3f6fa;color:#1769e0;border-color:#b9cff0}.btn.gold{background:#fff5df;color:#a66300;border-color:#edcc8e;box-shadow:none}.btn.danger{background:#fff0f0;color:#c84d4d;border-color:#f0c2c2;box-shadow:none}
+#mainScreen .biz-hero{background:linear-gradient(135deg,#fff 0,#f4f8ff 100%);border-color:#d9e3f1;box-shadow:0 14px 38px #2945680c;padding:29px}.biz-hero::after{opacity:.08}.biz-kicker{color:var(--space-color,#1769e0)}.biz-hero h2{color:#17223b;font-size:27px}.biz-hero p{color:#65728a}.health-item{background:#fff;border-color:#dfe6f0;box-shadow:0 6px 18px #2945680a}.health-item b{color:var(--space-color,#1769e0)}.health-item span{color:#8793a6}
+#mainScreen .stat{background:#fff;border-color:#dfe5ee;box-shadow:0 9px 28px #2945680a;padding:19px 20px}.stat::after{background:#1769e00c}.stat .k{color:#7b899f}.stat .v{color:#1769e0}.stat .s{color:#8c98aa}
+#mainScreen .card{background:#fff;border-color:#dfe5ee;box-shadow:0 9px 28px #2945680a}.sec-note{background:#eaf2ff;border-color:#cfe0f8;color:#53637b}.sec-note b{color:#1769e0}
+#mainScreen .kcard{background:#fff;border-color:#dde4ee;box-shadow:0 8px 25px #29456808}.kcard:hover{border-color:#b6cef1;box-shadow:0 15px 35px #29456813}.kcard .ic{background:#eaf2ff;border-color:#cfe1fb}.kcard .cat{background:#eef2f7;color:#6f7d92}.kcard .val{background:#f5f7fa;border-color:#dfe5ee;color:#526078}.kcard .val button{background:#fff;border-color:#d9e1ec;color:#68768b}.kcard .meta .exp.ok{background:#e7f6f1;color:#087f5b}.chip{background:#fff;border-color:#dce3ed;color:#66758b}.chip.on{background:#eaf2ff;color:#1769e0;border-color:#bcd3f4}
+#mainScreen input,#mainScreen select,#mainScreen textarea{background:#fff;border-color:#d6deea;color:#17223b}#mainScreen input::placeholder,#mainScreen textarea::placeholder{color:#9aa5b6}
+#mainScreen .tbl-wrap{border-color:#dfe5ee;background:#fff;box-shadow:0 9px 28px #29456808}#mainScreen th{background:#f5f7fa;color:#718096;border-color:#dfe5ee}#mainScreen td{color:#607087;border-color:#e8ecf2}#mainScreen tr:hover td{background:#f7f9fc;color:#17223b}
+#mainScreen footer{color:#93a0b2}
+.mask{--bg:#f5f7fb;--bg2:#f2f5f9;--card:#fff;--line:#dfe5ee;--line2:#cbd5e3;--txt:#17223b;--txt2:#5f6d84;--txt3:#8793a6;--accent:#1769e0;--accent2:#1769e0;--accentDim:#1769e014;background:#17223b66;backdrop-filter:blur(8px)}.modal{background:#fff;border-color:#d9e1ec;color:#17223b;box-shadow:0 30px 90px #18345c2e}.modal input,.modal select,.modal textarea{background:#f6f8fb;border-color:#d4ddea;color:#17223b}.modal .big-val{background:#f1f5fa;border-color:#bdd4f5;color:#1e385e}.toggle-card{background:#f7f9fc;border-color:#d6deea;color:#5e6c82}.toggle-opt input:checked + .toggle-card{border-color:#1769e0;background:#eaf2ff;color:#17223b}
+.toast-item{background:#fff;border-color:#bed4f2;color:#263650;box-shadow:0 15px 45px #17345b2b}.toast-item::before{background:#1769e0}
+/* 团队视图 */
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(265px,1fr));gap:16px;margin-top:16px}
+.team-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;text-align:left;cursor:pointer;transition:.25s;position:relative;overflow:hidden}
+.team-card:hover{transform:translateY(-3px);border-color:#a9c9f8;box-shadow:0 12px 30px #29456814}
+.team-card .tc-top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.team-card h3{margin:0;font-size:16px}
+.team-card .tc-ic{width:40px;height:40px;border-radius:11px;background:#f0f2f8;color:#1769e0;display:grid;place-items:center;font-size:19px;flex:none}
+.team-card .tc-mode{font-size:11px;padding:2px 9px;border-radius:99px;font-weight:800;margin-left:auto;flex:none}
+.team-card .tc-mode.class{background:#e7f6f1;color:#087f5b}
+.team-card .tc-mode.research{background:#f3ecff;color:#7a4fd0}
+.team-card .tc-desc{color:var(--txt3);font-size:12.5px;line-height:1.7;min-height:40px}
+.team-card .tc-meta{display:flex;gap:14px;color:var(--txt3);font-size:12px;margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+.team-card .tc-meta b{color:var(--txt2)}
+.team-subnav{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.tsb{background:transparent;border:1px solid var(--line);border-radius:99px;padding:7px 16px;font-size:13px;color:var(--txt2);cursor:pointer;transition:.2s}
+.tsb:hover{border-color:var(--line2)}
+.tsb.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+#mainScreen .tsb.on{background:#1769e0;border-color:#1769e0}
+@keyframes heroRise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+@keyframes ambientGlow{50%{filter:hue-rotate(12deg);scale:1.08}}
+@keyframes brandPulse{0%{opacity:.8;transform:scale(.8)}70%,100%{opacity:0;transform:scale(1.25)}}
+@keyframes cardFloat{50%{transform:rotate(2deg) translateY(5px)}}
+@keyframes flowScan{from{transform:translateX(-100%)}to{transform:translateX(400%)}}
+@keyframes featuredPulse{0%{opacity:.55;transform:scale(1)}75%,100%{opacity:0;transform:scale(1.025)}}
+@keyframes ctaOrb{50%{transform:translate(28px,24px) scale(1.12)}}
+@media(max-width:900px){.site-links{display:none}.hero{grid-template-columns:1fr;padding-top:45px}.hero-copy{text-align:center}.hero-copy>p{margin:auto}.hero-points{justify-content:center}.auth-shell{max-width:470px;margin:auto}.feature-grid,.plan-grid{grid-template-columns:1fr}.security-flow{grid-template-columns:1fr 1fr}.flow-step:nth-child(2){border-right:0}}
+@media(max-width:900px){.ws-grid{grid-template-columns:1fr}.ws-card{min-height:0}.biz-hero{grid-template-columns:1fr}.purchase-grid,.purchase-checkout{grid-template-columns:1fr}.purchase-plan{min-height:0}}
+@media(max-width:640px){.klist{grid-template-columns:1fr}.lock-card{padding:28px 22px}.site-nav{padding:0 18px}.nav-actions .land-btn:first-child{display:none}.hero{padding:34px 18px 70px;gap:45px}.hero-copy h1{letter-spacing:-2px}.market-section{padding:70px 18px}.trust-inner{display:block;text-align:center}.trust-items{justify-content:center;margin-top:14px;gap:14px}.security-flow{grid-template-columns:1fr}.flow-step{border-right:0;border-bottom:1px solid #ffffff1f}.final-cta{margin:0 16px 45px}.site-nav .brand small{display:none}.workspace-screen,.purchase-screen{padding:18px}.ws-content{padding-top:45px}.ws-content h1,.purchase-hero h1{letter-spacing:-1.8px}.purchase-hero{padding-top:48px}.purchase-plan,.purchase-checkout{padding:22px}.purchase-plan.selected{padding:21px}.purchase-actions>*{width:100%}.biz-health{grid-template-columns:1fr 1fr}.workspace-badge{order:3;width:100%;justify-content:center}.recent-row{flex-wrap:wrap}.recent-row>span{min-width:0;max-width:100%;overflow-wrap:anywhere}.recent-row>span:last-child{width:100%;margin-left:0!important;text-align:left!important}}
+@media(prefers-reduced-motion:reduce){.landing *,.landing *::before,.landing *::after{animation:none!important;scroll-behavior:auto!important;transition-duration:.01ms!important}.js-reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<!-- ======== 登录/注册 ======== -->
+<div id="authScreen" class="landing">
+  <header class="site-nav">
+    <div class="brand"><span class="brand-mark">钥</span><span>钥盾 KeyShield<small>校园 AI 密钥治理平台</small></span></div>
+    <nav class="site-links"><a href="#capabilities">产品能力</a><a href="#security">安全设计</a><a href="#plans">适用方案</a></nav>
+    <div class="nav-actions"><button class="land-btn" onclick="focusAuth('login')">登录控制台</button><button class="land-btn primary" onclick="focusAuth('register')">立即启用</button></div>
+  </header>
+
+  <main>
+  <section class="hero">
+    <div class="hero-copy">
+      <span class="eyebrow">✦ 为校园 AI 基础设施而生</span>
+      <h1>让每一把 AI 密钥，<span>只在该出现的地方出现。</span></h1>
+      <p>学校统一托管模型密钥，个人安心保存凭据，团队按需领用资源。钥盾把加密、权限、调用与审计收进一个简单的工作台。</p>
+      <div class="hero-points"><span>AES-256-GCM 信封加密</span><span>代理调用不下发密钥</span><span>操作全程可追溯</span></div>
+    </div>
+    <div class="auth-shell" id="authCard"><div class="lock-card">
+    <div class="logo-shield" id="logo"></div>
+    <div class="lock-title">进入钥盾 <em>控制台</em></div>
+    <div class="lock-sub"><b>安全从正确的入口开始</b> · <span id="authMode">欢迎回来</span></div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab on" id="tabLogin" onclick="switchAuth('login')">登 录</button>
+      <button class="auth-tab" id="tabReg" onclick="switchAuth('register')">注 册</button>
+    </div>
+
+    <!-- 登录 -->
+    <div id="loginForm">
+      <div class="pwd-row"><span class="ficon">👤</span><input id="fUser" placeholder="用户名 / 邮箱" autocomplete="username"></div>
+      <div class="pwd-row"><span class="ficon">🔑</span><input id="fPwd" type="password" placeholder="密码" autocomplete="current-password"></div>
+      <div class="lock-err" id="authErr"></div>
+      <button class="btn" onclick="doLogin()">🔓 登 录</button>
+      <div class="hint-line"><button class="auth-link" onclick="switchAuth('forgot')">忘记密码？使用邮箱和恢复密钥找回</button></div>
+    </div>
+
+    <!-- 注册 -->
+    <div id="regForm" class="hidden">
+      <div class="pwd-row"><span class="ficon">👤</span><input id="rUser" placeholder="用户名(至少2位)" autocomplete="username"></div>
+      <div class="pwd-row is-code"><span class="ficon">✉️</span><input id="rEmail" type="email" placeholder="邮箱地址" autocomplete="email"><button class="get-code" id="btnCode" onclick="sendRegisterEmail()">获取验证码</button></div>
+      <div class="pwd-row"><span class="ficon">🔢</span><input id="rCode" placeholder="邮箱验证码" maxlength="6" inputmode="numeric" autocomplete="one-time-code"></div>
+      <div class="pwd-row hidden" id="inviteRow"><span class="ficon">✉️</span><input id="rInvite" placeholder="管理员发放的 KS- 邀请码" autocomplete="one-time-code"></div>
+      <div class="pwd-row"><span class="ficon">🔑</span><input id="rPwd" type="password" placeholder="密码(至少8位)" autocomplete="new-password"></div>
+      <div class="demo-code-tip" id="demoTip"></div>
+      <div class="lock-err" id="regErr"></div>
+      <button class="btn" onclick="doRegister()">🗝️ 注册并进入</button>
+    </div>
+
+    <!-- 找回密码 -->
+    <div id="forgotForm" class="hidden">
+      <div class="pwd-row"><span class="ficon">👤</span><input id="fpIdent" placeholder="用户名 / 邮箱" autocomplete="username"></div>
+      <div class="pwd-row is-code"><span class="ficon">✉️</span><input id="fpEmail" type="email" placeholder="已绑定邮箱" autocomplete="email"><button class="get-code" id="btnForgotCode" onclick="sendForgotEmail()">获取验证码</button></div>
+      <div class="pwd-row"><span class="ficon">🔢</span><input id="fpCode" placeholder="邮箱验证码" maxlength="6" inputmode="numeric" autocomplete="one-time-code"></div>
+      <div class="pwd-row"><span class="ficon">🧾</span><input id="fpRecovery" placeholder="KS-REC- 保险箱恢复密钥" autocomplete="off"></div>
+      <div class="pwd-row"><span class="ficon">🔑</span><input id="fpPassword" type="password" placeholder="设置新密码(至少8位)" autocomplete="new-password"></div>
+      <div class="demo-code-tip" id="forgotDemoTip"></div>
+      <div class="lock-err" id="forgotErr"></div>
+      <button class="btn" onclick="doRecoverPassword()">重置密码</button>
+      <div class="hint-line"><button class="auth-link" onclick="switchAuth('login')">← 返回登录</button></div>
+    </div>
+
+    <div class="hint-line">公网注册账号均为<b>普通用户</b><br>管理员由服务器安全初始化或现有管理员授权</div>
+    </div></div>
+  </section>
+
+  <div class="trustbar"><div class="trust-inner"><span>为校园真实用钥场景设计</span><div class="trust-items"><a href="#authCard" onclick="requireLogin(event)">个人保险箱</a><a href="#authCard" onclick="requireLogin(event)">团队协作</a><a href="#authCard" onclick="requireLogin(event)">学校统管</a><span>19+ AI 与数字服务</span></div></div></div>
+
+  <section class="market-section" id="capabilities"><div class="market-inner">
+    <div class="section-kicker">发现 · 保护 · 审计</div><h2 class="section-title">不只是保存密钥，<br>而是治理 AI 资源的每一次使用。</h2>
+    <p class="section-lead">从散落在聊天群和代码里的 API Key，到可授权、可撤销、可追踪的校园数字资产。</p>
+    <div class="feature-grid">
+      <article class="feature-card"><div class="feature-icon">⌁</div><h3>个人密钥保险箱</h3><p>每位用户拥有独立数据密钥。密钥默认打码，查看、复制、轮换全部留痕，避免凭据散落在明文文件中。</p></article>
+      <article class="feature-card"><div class="feature-icon">◎</div><h3>团队按需领用</h3><p>教研组、实验室和项目团队共享授权资源。成员获得使用权，不必获得真实密钥，撤销后立即失效。</p></article>
+      <article class="feature-card"><div class="feature-icon">▦</div><h3>学校统一治理</h3><p>管理员集中托管采购的模型 Token，查看全站审计与账号状态，为后续额度分档和成本治理建立统一入口。</p></article>
+    </div>
+  </div></section>
+
+  <section class="market-section security-band" id="security"><div class="market-inner">
+    <div class="section-kicker">Security by design</div><h2 class="section-title">复杂的安全机制，简单的使用体验。</h2>
+    <p class="section-lead">密码不直接加密业务数据。每个用户使用独立随机数据密钥，修改密码只重新包装钥匙，不触碰原有密文。</p>
+    <div class="security-flow">
+      <div class="flow-step"><b>01 · 派生</b><strong>PBKDF2 × 240,000</strong><p>登录密码与独立 Salt 派生包装密钥。</p></div>
+      <div class="flow-step"><b>02 · 包装</b><strong>用户独立 DEK</strong><p>随机 256 位数据密钥被安全包装保存。</p></div>
+      <div class="flow-step"><b>03 · 加密</b><strong>AES-256-GCM</strong><p>每条密文具备机密性与完整性保护。</p></div>
+      <div class="flow-step"><b>04 · 交付</b><strong>领用不领钥</strong><p>代理模式只返回结果，不向浏览器下发 Key。</p></div>
+    </div>
+  </div></section>
+
+  <section class="market-section" id="plans"><div class="market-inner">
+    <div class="section-kicker">按组织方式自然扩展</div><h2 class="section-title">服务个人，也服务整个学校。</h2>
+    <div class="plan-grid">
+      <article class="plan-card"><div class="plan-label">PERSONAL</div><h3>个人版</h3><p>面向教师、学生与独立研究者的私有密钥空间。</p><ul><li>独立加密保险箱</li><li>到期提醒与安全轮换</li><li>个人操作审计</li></ul><a class="plan-login-link" href="#authCard" onclick="requireLogin(event)"><span>登录后进入个人空间</span><span>→</span></a></article>
+      <article class="plan-card featured"><div class="plan-label">TEAM · 推荐</div><h3>团队版</h3><p>面向教研组、实验室和课程项目的协作方案。</p><ul><li>共享密钥与成员授权</li><li>代理调用不暴露凭据</li><li>团队用量分档基础</li></ul><a class="plan-login-link" href="#authCard" onclick="requireLogin(event)"><span>登录后进入团队空间</span><span>→</span></a></article>
+      <article class="plan-card"><div class="plan-label">CAMPUS</div><h3>学校版</h3><p>面向信息中心和学院管理员的统一治理方案。</p><ul><li>全校密钥集中托管</li><li>用户停用即时生效</li><li>全站审计与成本治理</li></ul><a class="plan-login-link" href="#authCard" onclick="requireLogin(event)"><span>登录后进入学校空间</span><span>→</span></a></article>
+    </div>
+  </div></section>
+
+  <section class="final-cta"><h2>把 AI 能力交给师生，<br>把密钥风险留在钥盾。</h2><p>从第一把学校托管密钥开始，建立清晰、可信、可追溯的使用秩序。</p><button class="land-btn" onclick="focusAuth('register')">使用邮箱验证加入 →</button></section>
+  </main>
+  <div class="land-footer">钥盾 KeyShield · 校园 AI 密钥安全管理平台 · 学生原创项目</div>
+</div>
+
+<!-- ======== 服务空间选择 ======== -->
+<div id="workspaceScreen" class="workspace-screen hidden">
+  <div class="ws-top">
+    <div class="brand"><span class="brand-mark">钥</span><span>钥盾 KeyShield<small>选择你的服务空间</small></span></div>
+    <button class="ws-back" onclick="doLogout()">退出账号</button>
+  </div>
+  <div class="ws-content">
+    <div class="ws-kicker">WORKSPACE · 服务入口</div>
+    <h1>今天要管理哪一类<br>AI 密钥资产？</h1>
+    <p class="ws-lead">不同空间对应不同的业务视角。个人关注隐私与轮换，团队关注协作，学校/企业提供组织资源领用与分级治理。</p>
+    <div class="ws-grid">
+      <button class="ws-card" style="--ws-glow:#dff8ef" onclick="chooseWorkspace('personal')">
+        <div class="ws-icon" style="background:#e5f8f1;color:#087f5b">♙</div><h2>个人空间</h2><p>属于你自己的加密保险箱，适合教师、学生与独立研究者管理私有 API Key。</p>
+        <ul><li>用户独立 DEK 信封加密</li><li>查看、复制与轮换留痕</li><li>到期提醒与分类管理</li></ul><div class="ws-enter"><span>进入个人后台</span><span>→</span></div>
+      </button>
+      <button class="ws-card" style="--ws-glow:#e5efff" onclick="chooseWorkspace('team')">
+        <div class="ws-icon">♟</div><h2>团队空间</h2><p>面向教研组、实验室和项目团队，以领用不领钥的方式共享学校 AI 资源。</p>
+        <ul><li>共享密钥统一领用</li><li>代理调用不暴露 Key</li><li>团队操作审计基础</li></ul><div class="ws-enter"><span>进入团队后台</span><span>→</span></div>
+      </button>
+      <button id="enterpriseWorkspace" class="ws-card" style="--ws-glow:#fff1d8" onclick="chooseWorkspace('enterprise')">
+        <div class="ws-icon" style="background:#fff4df;color:#b36b00">▦</div><h2>学校 / 企业</h2><p>面向全体组织成员使用统一 AI 资源，管理员同时负责密钥托管、用户治理与全站审计。</p>
+        <ul><li>成员领用组织资源</li><li>代理调用不暴露密钥</li><li>管理员分级治理</li></ul><div class="ws-enter"><span>进入组织空间</span><span>→</span></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ======== 校园组织购买 / 订阅 ======== -->
+<div id="purchaseScreen" class="purchase-screen hidden">
+  <div class="purchase-wrap">
+    <div class="purchase-top">
+      <div class="brand"><span class="brand-mark">钥</span><span>钥盾 KeyShield<small>校园组织部署与订阅</small></span></div>
+      <button class="purchase-back" onclick="showWorkspaceSelector()">← 返回空间选择</button>
+    </div>
+    <section class="purchase-hero">
+      <div class="purchase-kicker">CAMPUS DELIVERY · 校园交付方案</div>
+      <h1>让钥盾进入校园，<br>从合适的部署方式开始。</h1>
+      <p>选择自主本地部署，或由我们协助完成上线。两种方案在订阅生效后都可获取安全安装包，学校的数据与密钥仍由学校自己掌控。</p>
+    </section>
+    <div class="purchase-grid" role="radiogroup" aria-label="校园部署方式">
+      <button id="purchaseSelfHosted" class="purchase-plan selected" role="radio" aria-checked="true" onclick="selectCampusPlan('self_hosted')">
+        <div class="purchase-plan-icon">⌄</div><div class="purchase-plan-tag">SELF-HOSTED · 自主交付</div>
+        <h2>安装包本地部署</h2><p>适合拥有校内服务器、运维或信息中心团队的学校，自主完成安装和长期维护。</p>
+        <ul><li>订阅后立即下载安装包</li><li>数据库与密钥保留在校内</li><li>包含部署脚本和安全说明</li><li>支持后续版本升级</li></ul>
+      </button>
+      <button id="purchaseAssisted" class="purchase-plan" role="radio" aria-checked="false" onclick="selectCampusPlan('assisted')">
+        <div class="purchase-plan-icon">✦</div><div class="purchase-plan-tag">ASSISTED · 专人协助</div>
+        <h2>协助部署</h2><p>适合希望快速上线的学院、实验室或学校，由我们协助检查环境并完成部署验证。</p>
+        <ul><li>部署环境与域名检查</li><li>协助配置 HTTPS 与服务进程</li><li>初始化管理员和安全策略</li><li>上线后提供安装包留档</li></ul>
+      </button>
+    </div>
+    <section class="purchase-checkout">
+      <div class="purchase-action">
+        <span id="subscriptionBadge" class="subscription-badge">尚未订阅</span>
+        <h2 id="purchaseActionTitle">开通安装包本地部署</h2>
+        <p id="purchaseActionText">当前为本地演示环境，可模拟开通订阅并验证安装包下载，不会产生任何费用。</p>
+        <div id="inactiveSubscriptionActions" class="purchase-actions">
+          <button id="demoSubscribeButton" class="purchase-primary" onclick="activateCampusSubscription()">演示开通订阅（不产生费用）</button>
+          <a id="contactSubscribeLink" class="purchase-secondary" href="mailto:1287585727@qq.com">联系开通</a>
+        </div>
+        <div id="activeSubscriptionActions" class="purchase-actions hidden">
+          <a class="purchase-primary" href="/api/subscription/package">↓ 下载安装包</a>
+          <button class="purchase-secondary" onclick="enterEnterpriseBackend()">进入校园服务后台 →</button>
+        </div>
+        <div class="purchase-note">安装包由服务器按安全白名单生成，不包含数据库、用户密钥、站点密钥、会话密钥或虚拟环境。</div>
+      </div>
+      <aside class="contact-card">
+        <b>需要报价、合同或部署咨询？</b>
+        <p>请说明学校名称、预计使用人数和服务器环境，我们会据此确认交付方式。</p>
+        <a id="campusContactLink" href="mailto:1287585727@qq.com">1287585727@qq.com</a>
+      </aside>
+    </section>
+  </div>
+</div>
+
+<!-- ======== 主界面 ======== -->
+<div id="mainScreen" class="hidden">
+  <div id="app">
+    <header>
+      <div class="h-logo">
+        <svg viewBox="0 0 48 48" fill="none"><path d="M24 3 42 10v13c0 11.2-7.5 19.3-18 22C13.5 42.3 6 34.2 6 23V10L24 3z" fill="#1769e0" stroke="#1769e0" stroke-width="2"/><path d="M24 12l6.5 3.6v5.4c0 4.9-2.7 8.4-6.5 10.6-3.8-2.2-6.5-5.7-6.5-10.6v-5.4L24 12z" stroke="#ffffff" stroke-width="1.6" fill="#ffffff18"/><circle cx="24" cy="22" r="2.3" fill="#ffffff"/></svg>
+        <div>
+          <div class="h-name">钥盾 <em>KeyShield</em></div>
+          <div class="h-tag">校园 AI 密钥安全管理平台 · 服务端版</div>
+        </div>
+      </div>
+      <div class="h-user">👤 <span id="meName">-</span><span class="role" id="meRole">-</span></div>
+      <div class="workspace-badge"><span id="workspaceIcon">♙</span><span id="workspaceName">个人空间</span><button onclick="showWorkspaceSelector()">切换</button></div>
+      <div class="h-actions">
+        <button class="btn ghost sm" id="btnDemo" onclick="loadDemo()">✨ 演示数据</button>
+        <button class="btn ghost sm" onclick="openAccountSecurity()">🛡️ 账号安全</button>
+        <button class="btn sm" onclick="doLogout()">🚪 退出</button>
+      </div>
+    </header>
+
+    <nav id="navBar">
+      <button class="tab on" data-t="dash" onclick="switchTab('dash')">🏠 仪表盘</button>
+      <button class="tab" data-t="keys" onclick="switchTab('keys')">🔑 我的密钥<span class="cnt" id="cntKeys">0</span></button>
+      <button class="tab" data-t="shared" onclick="switchTab('shared')">🏦 托管中心</button>
+      <button class="tab hidden" data-t="teams" id="tabTeams" onclick="switchTab('teams')">👥 我的团队</button>
+      <button class="tab" data-t="tokens" onclick="switchTab('tokens')">🪪 开发者Key</button>
+      <button class="tab" data-t="usage" onclick="switchTab('usage')">📊 用量审计</button>
+      <button class="tab" data-t="logs" onclick="switchTab('logs')">📜 审计日志</button>
+      <button class="tab hidden" data-t="users" id="tabUsers" onclick="switchTab('users')">👥 用户管理</button>
+    </nav>
+
+    <!-- 仪表盘 -->
+    <section id="view-dash">
+      <div class="biz-hero" id="bizHero">
+        <div><div class="biz-kicker" id="bizKicker">PERSONAL · 个人服务台</div><h2 id="bizTitle">你的密钥，只属于你的保险箱</h2><p id="bizDesc">使用独立数据密钥保护个人凭据，查看、复制、编辑和轮换全部记录在案。</p>
+          <div class="biz-actions"><button class="btn" id="bizPrimary" onclick="openEdit(null)">＋ 添加个人密钥</button><button class="btn ghost" id="bizSecondary" onclick="switchTab('logs')">查看审计记录</button></div>
+        </div>
+        <div class="biz-health"><div class="health-item"><b id="healthScope">私有</b><span>数据可见范围</span></div><div class="health-item"><b>AES-256</b><span>密文保护</span></div><div class="health-item"><b>30 min</b><span>空闲会话期限</span></div><div class="health-item"><b id="healthMode">DEK</b><span>密钥模式</span></div></div>
+      </div>
+      <div class="grid-stats">
+        <div class="stat"><div class="k" id="statKeyLabel">我的密钥</div><div class="v" id="stTotal">0</div><div class="s" id="statKeySub">个人保险箱内</div></div>
+        <div class="stat"><div class="k">分类数</div><div class="v" id="stCats">0</div><div class="s">按平台整理</div></div>
+        <div class="stat"><div class="k" id="statSharedLabel">托管密钥</div><div class="v" id="stShared">0</div><div class="s" id="statSharedSub">学校统一发放</div></div>
+        <div class="stat"><div class="k" id="statOpsLabel">操作记录</div><div class="v" id="stOps">0</div><div class="s" id="statOpsSub">审计日志条数</div></div>
+      </div>
+      <div class="card" style="margin-bottom:22px" id="workspaceGuide">
+        <h3 id="guideTitle">📌 个人空间使用指南<span class="sub">—— 安全地保存每一把密钥</span></h3>
+        <p id="guideText" style="color:var(--txt2);font-size:13.5px;line-height:2">
+          学校里各个 AI 应用都在用<b style="color:var(--accent2)">不同大模型的 API Key</b>:DeepSeek、通义、文心……而这些 key 花钱买、容易丢、散落在群里和代码里。<br>
+          <b style="color:var(--accent2)">钥盾</b>做的事:学校统一<b>托管</b>密钥(管理员),教职工<b>注册领用</b>(普通用户),每次调用<b>记审计</b>,泄露<b>一键轮换</b>——密钥全部<b style="color:var(--gold)">加密存储</b>,服务器也不留明文。
+        </p>
+      </div>
+      <div class="card">
+        <h3>🕒 最近操作</h3>
+        <div id="dashRecent"></div>
+      </div>
+    </section>
+
+    <!-- API 用量审计 -->
+    <section id="view-usage" class="hidden">
+      <div class="sec-note"><b>用量审计</b>:每次共享 API 调用都绑定请求号、用户、厂商、模型、Token 与状态；普通用户只看自己，管理员可看全站。</div>
+      <div class="grid-stats" style="margin-bottom:18px">
+        <div class="stat"><div class="k">调用总数</div><div class="v" id="usageCalls">0</div><div class="s">真实与演示请求</div></div>
+        <div class="stat"><div class="k">成功调用</div><div class="v" id="usageSuccess">0</div><div class="s">成功或演示完成</div></div>
+        <div class="stat"><div class="k">Token 用量</div><div class="v" id="usageTokens">0</div><div class="s">厂商返回统计</div></div>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>时间 / 请求号</th><th>使用者</th><th>资源</th><th>厂商 / 模型</th><th>Token</th><th>耗时</th><th>状态</th></tr></thead>
+        <tbody id="usageBody"></tbody>
+      </table></div>
+    </section>
+
+    <!-- 成员专属虚拟 Key -->
+    <section id="view-tokens" class="hidden">
+      <div class="sec-note"><b>成员专属 ks_ 虚拟 Key</b>：绑定当前账号和指定组织资源，可设置到期时间与每日额度；数据库只保存摘要，真实厂商 Key 始终不下发。请先在托管中心或团队中领用资源，再点击“创建 ks_”。</div>
+      <div class="card" style="margin-bottom:18px">
+        <h3>🔌 标准 SDK 接入</h3>
+        <p style="color:var(--txt2);font-size:13px;line-height:1.9;margin-top:8px">Base URL：<code id="virtualBaseUrl" style="user-select:all"></code><br>接口：<code>/chat/completions</code>（OpenAI兼容，当前支持非流式文本消息）</p>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>名称 / 前缀</th><th>绑定资源</th><th>模型</th><th>有效期</th><th>每日额度</th><th>最后使用</th><th>状态</th><th>操作</th></tr></thead>
+        <tbody id="virtualKeyBody"></tbody>
+      </table></div>
+    </section>
+
+    <!-- 我的密钥 -->
+    <section id="view-keys" class="hidden">
+      <div class="toolbar">
+        <div class="search"><span>🔍</span><input id="kw" placeholder="搜索名称 / 分类 / 备注…" oninput="renderKeys()"></div>
+        <div class="chip-filters" id="chipFilters"></div>
+        <button class="btn" onclick="openEdit(null)">➕ 添加密钥</button>
+      </div>
+      <div class="klist" id="klist"></div>
+    </section>
+
+    <!-- 托管中心 -->
+    <section id="view-shared" class="hidden">
+      <div class="sec-note"><b>托管中心</b>= 学校统一管理的共享密钥:管理员把 real key 存进来,普通用户只能看到打码版;<b style="color:var(--gold)">调用时由系统代发,key 不会下发到你的电脑</b>——这就是"领用不领钥"。</div>
+      <div class="toolbar">
+        <div class="chip-filters" id="sharedFilters"></div>
+        <button class="btn gold hidden" id="btnAddShared" onclick="openEditShared()">🏦 托管新密钥(管理员)</button>
+      </div>
+      <div class="klist" id="sharedList"></div>
+    </section>
+
+    <!-- 我的团队(团队首页) -->
+    <section id="view-teams" class="hidden">
+      <div class="sec-note"><b>我的团队</b>:创建<b>班级项目</b>(主管理者支配,成员领用+代调用,可设有效期)或<b>科研小组</b>(全员可添加/调用/编辑/删除,共享多家厂商 API);成员凭入队码申请,主管理者审核。</div>
+      <div class="toolbar">
+        <span style="color:var(--txt2);font-size:13px">每个人都可以建团,团队空间仅在此工作区展示。</span>
+        <button class="btn" onclick="openCreateTeam()">➕ 创建团队</button>
+      </div>
+      <div class="team-grid" id="teamGrid"></div>
+      <div class="card" style="margin-top:18px">
+        <h3>🔗 用入队码加入</h3>
+        <p style="color:var(--txt2);font-size:13.5px;margin:6px 0 10px">向主管理者索要入队码(形如 <span style="font-family:var(--mono)">KS-XXXXXX</span>),提交后等待审核;被拒绝后可再次申请。</p>
+        <div class="toolbar" style="padding:0">
+          <input id="joinCodeInput" placeholder="例如 KS-AB2C3D" style="flex:1;max-width:260px" onkeydown="if(event.key==='Enter')joinTeamByCode()">
+          <button class="btn ghost" onclick="joinTeamByCode()">📥 申请加入</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 团队详情 -->
+    <section id="view-team" class="hidden">
+      <div class="toolbar" style="margin-bottom:14px">
+        <button class="btn ghost sm" onclick="backToTeams()">← 返回团队列表</button>
+        <span class="team-title" id="teamTitle" style="flex:1;font-weight:800;font-size:16px"></span>
+        <span id="teamJoinCode" style="font-family:var(--mono);font-size:13px;color:var(--accent2);cursor:pointer" onclick="copyTeamCode()" title="点击复制"></span>
+        <button class="btn sm gold hidden" id="btnAddTeamKey" onclick="openTeamKey(null)">➕ 添加团队密钥</button>
+        <button class="btn sm ghost hidden" id="btnAddTeamMember" onclick="openAddMember()">➕ 添加成员</button>
+      </div>
+      <div class="team-subnav" id="teamSubnav">
+        <button class="tsb on" data-ts="keys" onclick="switchTeamSub('keys')">🔑 团队密钥</button>
+        <button class="tsb" data-ts="members" onclick="switchTeamSub('members')">👥 成员管理</button>
+        <button class="tsb" data-ts="usage" onclick="switchTeamSub('usage')">📊 用量统计</button>
+      </div>
+      <div id="teamSubKeys"></div>
+      <div id="teamSubMembers" class="hidden"></div>
+      <div id="teamSubUsage" class="hidden"></div>
+    </section>
+
+    <!-- 审计日志 -->
+    <section id="view-logs" class="hidden">
+      <div class="sec-note"><b>审计日志</b>:每一次查看、复制、领用、调用都留痕——<span style="font-family:var(--mono)">谁、何时、动了哪个 key</span>,全站一查便知。<span id="auditIntegrity"></span></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th style="width:70px">用户</th><th style="width:170px">时间</th><th style="width:100px">动作</th><th>对象</th><th>详情</th></tr></thead>
+          <tbody id="logBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 用户管理(管理员) -->
+    <section id="view-users" class="hidden">
+      <div class="sec-note"><b>用户管理</b>:你(管理员)可以停用/启用任何账号——被停用的教职工将无法登录和领用密钥。</div>
+      <div class="toolbar" id="inviteAdminToolbar"><span style="color:var(--txt2);font-size:13px">公网注册只能成为普通用户；管理员通过 SSH 初始化或在此授权。</span><button class="btn" onclick="createInvitation()">✉️ 生成注册邀请码</button></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>用户名</th><th>角色</th><th>注册时间</th><th>状态</th><th style="width:130px">操作</th></tr></thead>
+          <tbody id="userBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>钥盾 KeyShield v3.3(服务端版)· AES-256-GCM + 成员虚拟 Key + 链式审计 · 真厂商密钥不下发 · 学生原创项目</footer>
+  </div>
+</div>
+
+<!-- ======== 模态:添加/编辑密钥 ======== -->
+<div class="mask hidden" id="maskEdit">
+  <div class="modal">
+    <h3 id="editTitle">➕ 添加密钥</h3>
+    <div class="f"><label>名称 *</label><input id="fName" placeholder="例如:DeepSeek API Key"></div>
+    <div class="frow">
+      <div class="f"><label>分类</label>
+        <select id="fCat">
+          <option value="">选择分类</option>
+          <optgroup label="🤖 大模型(国外)">
+            <option value="OpenAI">✨ OpenAI(ChatGPT)</option>
+            <option value="Claude">🟠 Claude(Anthropic)</option>
+            <option value="Gemini">🪐 Gemini(Google)</option>
+          </optgroup>
+          <optgroup label="🤖 大模型(国内)">
+            <option value="DeepSeek">🐳 DeepSeek</option>
+            <option value="通义千问">☁️ 通义千问(阿里百炼)</option>
+            <option value="Kimi">🌙 Kimi(月之暗面)</option>
+            <option value="火山引擎">🌋 火山引擎(豆包)</option>
+            <option value="智谱清言">🧠 智谱清言(GLM)</option>
+            <option value="文心一言">🖋 文心一言(百度千帆)</option>
+            <option value="讯飞星火">⚡ 讯飞星火</option>
+            <option value="MiniMax">🚀 MiniMax</option>
+            <option value="硅基流动">💠 硅基流动(SiliconFlow)</option>
+          </optgroup>
+          <optgroup label="🗺 地图服务">
+            <option value="高德">🗺 高德</option>
+            <option value="百度地图">🧭 百度地图</option>
+            <option value="腾讯地图">📍 腾讯地图</option>
+          </optgroup>
+          <optgroup label="🔧 其他">
+            <option value="君道AI">🎨 君道AI</option>
+            <option value="Ollama">📦 Ollama</option>
+            <option value="校园服务">🏫 校园服务</option>
+            <option value="其他">🔧 其他</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="f"><label>到期(可选)</label><input type="date" id="fExpire"></div>
+    </div>
+    <div class="f"><label>密钥内容 *</label><textarea id="fValue" rows="3" placeholder="sk-xxx..." class="mono" style="font-family:var(--mono)"></textarea></div>
+    <div class="f"><label>备注(可选)</label><input id="fNote" placeholder="用途、归属…"></div>
+    <div class="actions">
+      <button class="btn ghost" onclick="closeModal('maskEdit')">取消</button>
+      <button class="btn" onclick="saveEntry()">💾 保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======== 模态:查看 ======== -->
+<div class="mask hidden" id="maskView">
+  <div class="modal">
+    <h3>👁 查看密钥</h3>
+    <div class="hint-line" style="margin-bottom:8px">本次查看已记入审计日志 · 关闭即再次打码</div>
+    <div class="big-val" id="viewValue"></div>
+    <div class="actions">
+      <button class="btn ghost" onclick="closeModal('maskView')">关闭</button>
+      <button class="btn" onclick="copyFromView()">📋 复制</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======== 模态:轮换 ======== -->
+<div class="mask hidden" id="maskRotate">
+  <div class="modal">
+    <h3>🔄 密钥轮换</h3>
+    <div class="f"><label>新密钥</label><div class="frow"><input id="rotValue" class="mono" style="flex:3"><button class="btn ghost sm" style="flex:1" onclick="genKey()">🎲 生成</button></div></div>
+    <div class="hint-line">真实场景:到对应平台生成新 key 后填入。旧密钥作废并记入历史。</div>
+    <div class="actions">
+      <button class="btn ghost" onclick="closeModal('maskRotate')">取消</button>
+      <button class="btn gold" onclick="doRotate()">✅ 确认轮换</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======== 模态:托管密钥(管理员) ======== -->
+<div class="mask hidden" id="maskShared">
+  <div class="modal">
+    <h3>🏦 托管新密钥(全站发放)</h3>
+    <div class="f"><label>名称 *</label><input id="sName" placeholder="例如:学校统一 DeepSeek Key"></div>
+    <div class="frow">
+      <div class="f"><label>分类</label>
+        <select id="sCat">
+          <option value="DeepSeek">🐳 DeepSeek</option>
+          <option value="通义千问">☁️ 通义千问(阿里百炼)</option>
+          <option value="Kimi">🌙 Kimi(月之暗面)</option>
+          <option value="火山引擎">🌋 火山引擎(豆包)</option>
+          <option value="智谱清言">🧠 智谱清言(GLM)</option>
+          <option value="文心一言">🖋 文心一言(百度千帆)</option>
+          <option value="讯飞星火">⚡ 讯飞星火</option>
+          <option value="MiniMax">🚀 MiniMax</option>
+          <option value="硅基流动">💠 硅基流动(SiliconFlow)</option>
+          <option value="OpenAI">✨ OpenAI(ChatGPT)</option>
+          <option value="Claude">🟠 Claude(Anthropic)</option>
+          <option value="Gemini">🪐 Gemini(Google)</option>
+          <option value="高德">🗺 高德</option>
+          <option value="百度地图">🧭 百度地图</option>
+          <option value="腾讯地图">📍 腾讯地图</option>
+          <option value="君道AI">🎨 君道AI</option>
+          <option value="Ollama">📦 Ollama</option>
+          <option value="校园服务">🏫 校园服务</option>
+          <option value="其他">🔧 其他</option>
+        </select>
+      </div>
+      <div class="f"><label>用途说明</label><input id="sNote" placeholder="面向全体教职工"></div>
+    </div>
+    <div class="f"><label>调用模型（代理模式）</label><input id="sModel" placeholder="例如 deepseek-v4-flash；留空使用厂商默认模型"></div>
+    <div class="f"><label>下发方式</label>
+      <div class="ftoggle">
+        <label class="toggle-opt"><input type="radio" name="sMode" value="proxy" checked>
+          <span class="toggle-card"><b>🔒 仅代调用</b><br><small>key 不下发,老师无感使用系统代调</small></span></label>
+        <label class="toggle-opt" id="sDirectOption"><input type="radio" name="sMode" value="direct">
+          <span class="toggle-card"><b>📤 直接下发真 key</b><br><small>领用者可查看全文并复制(审计留痕)</small></span></label>
+      </div>
+    </div>
+    <div class="f"><label>密钥内容 *</label><textarea id="sValue" rows="3" class="mono" placeholder="sk-xxx..."></textarea></div>
+    <div class="actions">
+      <button class="btn ghost" onclick="closeModal('maskShared')">取消</button>
+      <button class="btn gold" onclick="saveShared()">🏦 托管</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======== 模态:共享 API 真实调用 ======== -->
+<div class="mask hidden" id="maskChat">
+  <div class="modal">
+    <h3 id="chatTitle">🚀 安全代理调用</h3>
+    <div class="hint-line">你的问题会由钥盾转发给所选厂商；真实 API Key 只在服务器内存中短暂解密，不会进入浏览器。</div>
+    <div class="f"><label>问题</label><textarea id="chatPrompt" rows="5" maxlength="8000" placeholder="例如：请用三点解释什么是信封加密"></textarea></div>
+    <div class="f hidden" id="chatAnswerWrap"><label>模型回答</label><div class="big-val" id="chatAnswer" style="white-space:pre-wrap;max-height:300px;overflow:auto;font-family:var(--font)"></div><div class="hint-line" id="chatMeta"></div></div>
+    <div class="actions"><button class="btn ghost" onclick="closeModal('maskChat')">关闭</button><button class="btn" id="btnChatSend" onclick="sendSharedPrompt()">🚀 安全调用</button></div>
+  </div>
+</div>
+
+<!-- ======== 模态:一次性展示邀请码 ======== -->
+<div class="mask hidden" id="maskInvite">
+  <div class="modal">
+    <h3>✉️ 注册邀请码</h3>
+    <div class="hint-line">邀请码只在本次生成时显示；服务端仅保存摘要。请通过可信渠道交给指定成员。</div>
+    <div class="big-val" id="inviteValue" style="word-break:break-all"></div>
+    <div class="hint-line" id="inviteMeta"></div>
+    <div class="actions"><button class="btn ghost" onclick="closeModal('maskInvite')">关闭</button><button class="btn" onclick="copyInvitation()">📋 复制邀请码</button></div>
+  </div>
+</div>
+
+<!-- ======== 模态:创建成员专属虚拟 Key ======== -->
+<div class="mask hidden" id="maskVirtualKey">
+  <div class="modal">
+    <h3>🪪 创建成员专属 ks_ Key</h3>
+    <div class="hint-line">绑定资源：<b id="vkResourceName"></b>。虚拟 Key仅显示一次，真实厂商 Key不会下发。</div>
+    <input type="hidden" id="vkResourceId">
+    <div class="f"><label>用途名称</label><input id="vkName" maxlength="60" placeholder="例如：我的 Python 项目"></div>
+    <div class="frow">
+      <div class="f"><label>有效期（天）</label><input id="vkDays" type="number" min="1" max="90" value="7"></div>
+      <div class="f"><label>每日最多调用</label><input id="vkDaily" type="number" min="1" value="50"></div>
+    </div>
+    <div class="actions"><button class="btn ghost" onclick="closeModal('maskVirtualKey')">取消</button><button class="btn" onclick="createVirtualKey()">创建虚拟 Key</button></div>
+  </div>
+</div>
+
+<div class="mask hidden" id="maskVirtualResult">
+  <div class="modal">
+    <h3>✅ 虚拟 Key创建成功</h3>
+    <div class="hint-line"><b>仅显示这一次。</b>请立即复制到系统凭据管理器；关闭后服务端无法恢复明文。</div>
+    <div class="f"><label>API Key</label><textarea id="vkResultKey" rows="3" class="mono" readonly></textarea></div>
+    <div class="f"><label>Base URL</label><input id="vkResultBase" class="mono" readonly></div>
+    <div class="f"><label>模型</label><input id="vkResultModel" class="mono" readonly></div>
+    <div class="actions"><button class="btn ghost" onclick="closeModal('maskVirtualResult')">我已保存</button><button class="btn" onclick="copyVirtualResult()">📋 复制 Key（30秒）</button></div>
+  </div>
+</div>
+
+<!-- ======== 模态:创建团队 ======== -->
+<div class="mask hidden" id="maskCreateTeam">
+  <div class="modal">
+    <h3>➕ 创建团队</h3>
+    <div class="f"><label>团队名称 *</label><input id="ctName" placeholder="例如:2024级计科2班 / 认知科学课题组" maxlength="60" onkeydown="if(event.key==='Enter')createTeam()"></div>
+    <div class="f"><label>协作模式</label>
+      <div class="ftoggle">
+        <label class="toggle-opt"><input type="radio" name="ctMode" value="class" checked>
+          <span class="toggle-card"><b>🏫 班级项目(管控式)</b><br><small>主管理者支配密钥与成员;成员可领用+代调用,可设有效期,不能添加/修改</small></span></label>
+        <label class="toggle-opt"><input type="radio" name="ctMode" value="research">
+          <span class="toggle-card"><b>🔬 科研小组(协作式)</b><br><small>全员可添加/调用/编辑/删除,共享多家厂商 API,无需领用</small></span></label>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" onclick="closeModal('maskCreateTeam')">取消</button>
+      <button class="btn" onclick="createTeam()">创建团队</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======== 模态:团队密钥(增/改) ======== -->
+<div class="mask hidden" id="maskTeamKey">
+  <div class="modal">
+    <h3 id="tkTitle">➕ 添加团队密钥</h3>
+    <div class="f"><label>名称 *</label><input id="tkName" placeholder="例如:课题组 DeepSeek Key" onkeydown="if(event.key==='Enter')saveTeamKey()"></div>
+    <div class="frow">
+      <div class="f"><label>分类</label><select id="tkCat"></select></div>
+      <div class="f"><label>用途说明</label><input id="tkNote" placeholder="团队成员共用"></div>
+    </div>
+    <div class="f"><label>调用模型（代理模式）</label><input id="tkModel" placeholder="例如 deepseek-v4-flash;留空使用厂商默认模型"></div>
+    <div class="f"><label>下发方式</label>
+      <div class="ftoggle">
+        <label class="toggle-opt"><input type="radio" name="tkMode" value="proxy" checked>
+          <span class="toggle-card"><b>🔒 仅代调用</b><br><small>key 不下发,成员无感使用系统代调</small></span></label>
+        <label class="toggle-opt" id="tkDirectOption"><input type="radio" name="tkMode" value="direct">
+          <span class="toggle-card"><b>📤 直接下发真 key</b><br><small>科研模式成员可查看全文(审计留痕)</small></span></label>
+      </div>
+    </div>
+    <div class="f"><label>密钥内容 *</label><textarea id="tkValue" rows="3" class="mono" placeholder="sk-xxx..."></textarea></div>
+    <div class="actions">
+      <button class="btn ghost" onclick="closeModal('maskTeamKey')">取消</button>
+      <button class="btn gold" onclick="saveTeamKey()">💾 保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======== 模态:直加成员(发卡) ======== -->
+<div class="mask hidden" id="maskAddMember">
+  <div class="modal">
+    <h3>➕ 添加成员(发卡)</h3>
+    <div class="hint-line">按用户名添加已有钥盾账号;可设有效期,<b>到期后身份自动失效</b>——适合班级按学期/按课程发放。留空 = 长期有效。</div>
+    <div class="f"><label>成员用户名 *</label><input id="amUsername" placeholder="例如 teacher_li" onkeydown="if(event.key==='Enter')saveAddMember()"></div>
+    <div class="f"><label>有效期(可选)</label><input type="date" id="amExpires"></div>
+    <div class="actions">
+      <button class="btn ghost" onclick="closeModal('maskAddMember')">取消</button>
+      <button class="btn" onclick="saveAddMember()">添加成员</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======== 模态:账号安全 ======== -->
+<div class="mask hidden" id="maskAccountSecurity">
+  <div class="modal">
+    <h3>🛡️ 账号安全</h3>
+    <div class="hint-line" id="accountEmailState">绑定邮箱后可接收验证码、找回密码并保护敏感操作。</div>
+    <div class="f"><label>绑定 / 更换邮箱</label><div class="pwd-row is-code"><span class="ficon">✉️</span><input id="bindEmail" type="email" placeholder="邮箱地址"><button class="get-code" id="btnBindCode" onclick="sendBindEmail()">获取验证码</button></div></div>
+    <div class="f"><label>邮箱验证码</label><input id="bindCode" maxlength="6" inputmode="numeric" autocomplete="one-time-code"></div>
+    <div class="f"><label>当前密码</label><input id="bindPassword" type="password" autocomplete="current-password"></div>
+    <div class="lock-err" id="accountErr"></div>
+    <div class="actions"><button class="btn ghost" onclick="closeModal('maskAccountSecurity')">关闭</button><button class="btn" onclick="bindAccountEmail()">验证并绑定</button></div>
+    <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+    <div class="hint-line">轮换恢复密钥需要当前密码和邮箱二次验证；新密钥生成后旧密钥立即失效。</div>
+    <div class="actions"><button class="btn ghost" onclick="rotateRecoveryKeyFlow()">🔄 轮换保险箱恢复密钥</button></div>
+  </div>
+</div>
+
+<!-- ======== 模态:仅显示一次的保险箱恢复密钥 ======== -->
+<div class="mask hidden" id="maskRecoveryKey">
+  <div class="modal">
+    <h3 id="recoveryTitle">✅ 请保存保险箱恢复密钥</h3>
+    <div class="hint-line"><b>仅显示这一次。</b>忘记登录密码时，必须同时提供邮箱验证码与该恢复密钥，才能在不让服务器掌握个人 DEK 的情况下恢复保险箱。</div>
+    <div class="f"><label>恢复密钥</label><textarea id="recoveryValue" rows="4" class="mono" readonly></textarea></div>
+    <div class="actions"><button class="btn" onclick="copyRecoveryKey()">📋 复制恢复密钥</button><button class="btn ghost" onclick="closeModal('maskRecoveryKey')">我已安全保存</button></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let ME = null;
+let editingId = null, rotTarget = null, revealTimer = null, viewId = null;
+let activeCat = "全部";
+let currentWorkspace = null;
+let PUBLIC_CONFIG = {invite_required:false,demo_mode:true,direct_mode:true,email_ready:true,email_demo:true,email_step_up:false};
+let chatTarget = null;
+let selectedCampusPlan = "self_hosted";
+let CAMPUS_SUBSCRIPTION = null;
+let CAMPUS_BILLING_MODE = "contact";
+let CAMPUS_CONTACT_EMAIL = "1287585727@qq.com";
+
+const esc = s => String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+/* 敏感内容只在剪贴板短暂停留；若用户已复制其他内容，不覆盖新剪贴板。 */
+async function copySensitive(value, label="敏感内容", seconds=30){
+  if(!value) return false;
+  try{
+    await navigator.clipboard.writeText(value);
+    toast(`📋 ${label}已复制 · 剪贴板保留${seconds}秒`);
+    setTimeout(async()=>{
+      try{
+        const current = await navigator.clipboard.readText();
+        if(current===value) await navigator.clipboard.writeText("");
+      }catch(e){ /* 浏览器未授予后台读取权限时保持静默，不影响复制结果。 */ }
+    }, seconds*1000);
+    return true;
+  }catch(e){
+    toast("复制失败，请手动选择复制","err");
+    return false;
+  }
+}
+
+/* ---------- 密钥格式校验(前后端同规则) ---------- */
+const KEY_RULES = {
+  /* —— 大模型:sk- 开头系列 —— */
+  "OpenAI":      s => /^sk-[A-Za-z0-9_\-]{20,}$/.test(s),
+  "DeepSeek":    s => /^sk-[A-Za-z0-9_\-]{16,}$/.test(s),
+  "Kimi":        s => /^sk-[A-Za-z0-9_\-]{16,}$/.test(s),
+  "通义千问":    s => /^sk-[A-Za-z0-9_\-]{16,}$/.test(s),
+  "MiniMax":     s => /^[A-Za-z0-9_\-]{20,}$/.test(s),
+  "硅基流动":    s => /^sk-[A-Za-z0-9_\-]{16,}$/.test(s),
+  /* —— 特殊前缀 —— */
+  "Claude":      s => /^sk-ant-[A-Za-z0-9_\-]{20,}$/.test(s),
+  "Gemini":      s => /^AIzaSy[A-Za-z0-9_\-]{25,}$/.test(s),
+  "火山引擎":    s => /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(s) || /^[A-Za-z0-9_\-]{32,}$/.test(s),
+  "智谱清言":    s => /^[A-Za-z0-9]{16,32}\.[A-Za-z0-9]{16,32}$/.test(s),
+  /* —— 地图 —— */
+  "高德":        s => /^[0-9a-fA-F]{32}$/.test(s),
+  "百度地图":    s => /^[A-Za-z0-9]{24,}$/.test(s) && !/\s/.test(s),
+  "腾讯地图":    s => /^[A-Za-z0-9]{24,}$/.test(s) && !/\s/.test(s),
+  /* —— 其他 —— */
+  "君道AI":      s => s.length >= 16 && !/\s/.test(s),
+  "Ollama":      s => s.length >= 8 && !/\s/.test(s),
+  "校园服务":    s => s.length >= 8 && !/\s/.test(s),
+  "其他":        s => s.length >= 8 && !/\s/.test(s),
+};
+const KEY_RULE_HINTS = {
+  "OpenAI":      "OpenAI 的 key 以 sk- 开头,后面至少 20 位(如 sk-proj-xxxx...)",
+  "DeepSeek":    "DeepSeek 的 key 以 sk- 开头,后面至少 16 位字母/数字",
+  "Kimi":        "Kimi(月之暗面)的 key 以 sk- 开头,后面至少 16 位",
+  "通义千问":    "通义千问(阿里百炼)的 key 以 sk- 开头,后面至少 16 位",
+  "MiniMax":     "MiniMax 的 key 至少 20 位,且不含空格",
+  "硅基流动":    "硅基流动的 key 以 sk- 开头,后面至少 16 位",
+  "Claude":      "Claude(Anthropic)的 key 以 sk-ant- 开头,后面至少 20 位",
+  "Gemini":      "Gemini 的 key 以 AIzaSy 开头(示例:AIzaSyxxxxxxxx...)",
+  "火山引擎":    "火山引擎(方舟)的 key 是 UUID 格式(8-4-4-4-12,如 1a2b3c4d-xxxx-xxxx-xxxx-xxxxxxxxxxxx)",
+  "智谱清言":    "智谱(GLM)的 key 是 id.secret 两段式,用点分隔",
+  "高德":        "高德 key 是 32 位十六进制字符(0-9/a-f)",
+  "百度地图":    "百度地图的 ak 至少 24 位,且不含空格",
+  "腾讯地图":    "腾讯地图的 key 至少 24 位,且不含空格",
+  "君道AI":      "君道AI token 至少 16 位且不含空格",
+  "Ollama":      "Ollama 本地模型通常无需密钥;如要填写,至少 8 位",
+  "校园服务":    "账号密码至少 8 位,且不能包含空格",
+  "其他":        "密钥至少 8 位,且不能包含空格",
+};
+function validateKeyFormat(cat, value){
+  const rule = KEY_RULES[cat] || KEY_RULES["其他"];
+  if(!rule(value)) return KEY_RULE_HINTS[cat] || KEY_RULE_HINTS["其他"];
+  return null;
+}
+function toast(msg, type="ok", ms=2600){
+  const t = document.createElement("div");
+  t.className = "toast-item " + (type==="warn"?"warn":type==="err"?"err":"");
+  t.textContent = msg;
+  $("toast").appendChild(t);
+  setTimeout(()=>{t.classList.add("fadeout");setTimeout(()=>t.remove(),450)}, ms);
+}
+async function api(path, body, method){
+  const opt = {method: method || (body?"POST":"GET"), headers:{"Content-Type":"application/json"}};
+  if(body) opt.body = JSON.stringify(body);
+  let r;
+  try{ r = await fetch(path, opt); }
+  catch(e){ return {ok:false, err:"无法连接钥盾服务，请确认服务已启动后刷新页面"}; }
+  const d = await r.json().catch(()=>({ok:false, err:"响应解析失败"}));
+  if(!d.ok && r.status===401){ showAuth(); throw new Error(d.err||"未登录"); }
+  return d;
+}
+function closeModal(id){ $(id).classList.add("hidden"); }
+function focusAuth(mode){
+  switchAuth(mode);
+  $("authCard").scrollIntoView({behavior:"smooth", block:"center"});
+  setTimeout(()=>$(mode==="login"?"fUser":"rUser").focus(), 350);
+}
+function requireLogin(event){
+  event?.preventDefault();
+  toast("请先登录，再进入对应的服务空间", "warn", 3200);
+  focusAuth("login");
+}
+function initLandingMotion(){
+  const landing = $("authScreen");
+  if(!landing || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const progress = document.createElement("div");
+  progress.className = "scroll-progress";
+  landing.appendChild(progress);
+  const updateScroll = ()=>{
+    const max = document.documentElement.scrollHeight - innerHeight;
+    progress.style.setProperty("--progress", (max>0 ? scrollY/max*100 : 0) + "%");
+    document.querySelector(".site-nav")?.classList.toggle("scrolled", scrollY > 12);
+  };
+  addEventListener("scroll", updateScroll, {passive:true});
+  updateScroll();
+
+  const groups = [
+    ...landing.querySelectorAll(".section-kicker,.section-title,.section-lead,.trust-inner,.final-cta"),
+    ...landing.querySelectorAll(".feature-card,.flow-step,.plan-card")
+  ];
+  groups.forEach((el,i)=>{
+    el.classList.add("js-reveal");
+    el.style.setProperty("--delay", ((i%4)*80) + "ms");
+  });
+  if("IntersectionObserver" in window){
+    const observer = new IntersectionObserver(entries=>entries.forEach(entry=>{
+      if(entry.isIntersecting){ entry.target.classList.add("in-view"); observer.unobserve(entry.target); }
+    }), {threshold:.14, rootMargin:"0px 0px -35px"});
+    groups.forEach(el=>observer.observe(el));
+  }else groups.forEach(el=>el.classList.add("in-view"));
+
+  if(matchMedia("(pointer:fine)").matches){
+    let frame = 0;
+    landing.addEventListener("pointermove", e=>{
+      if(frame) cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(()=>{
+        const x = e.clientX/innerWidth-.5, y = e.clientY/innerHeight-.5;
+        landing.style.setProperty("--pointer-x", (x*18)+"px");
+        landing.style.setProperty("--pointer-y", (y*14)+"px");
+        $("authCard").style.setProperty("--card-x", (x*7)+"px");
+        $("authCard").style.setProperty("--card-y", (y*5)+"px");
+      });
+    }, {passive:true});
+  }
+}
+
+/* ---------- 登录/注册 ---------- */
+let authMode = "login";
+function switchAuth(m){
+  authMode = m;
+  $("tabLogin").classList.toggle("on", m==="login");
+  $("tabReg").classList.toggle("on", m==="register");
+  $("loginForm").classList.toggle("hidden", m!=="login");
+  $("regForm").classList.toggle("hidden", m!=="register");
+  $("forgotForm").classList.toggle("hidden", m!=="forgot");
+  $("authMode").textContent = m==="login" ? "欢迎回来" : m==="register" ? "加入钥盾" : "找回密码";
+  $("authErr").textContent = ""; $("regErr").textContent = ""; $("forgotErr").textContent = "";
+  $("demoTip").style.display = "none"; $("forgotDemoTip").style.display = "none";
+}
+window.toggleAuth = switchAuth;
+async function doLogin(){
+  const ident = $("fUser").value.trim(), p = $("fPwd").value;
+  $("authErr").textContent = "";
+  if(!ident || !p) return $("authErr").textContent = "请输入账号和密码";
+  const d = await api("/api/login", {username: ident, password: p});
+  if(!d.ok) return $("authErr").textContent = d.err||"登录失败";
+  toast("🔓 欢迎回来,"+d.username);
+  sessionStorage.removeItem("keyshield_workspace");
+  await enterMain();
+}
+const codeTimers = new Map();
+function applyPublicConfig(){
+  $("inviteRow").classList.toggle("hidden", !PUBLIC_CONFIG.invite_required);
+  $("inviteAdminToolbar").classList.toggle("hidden", !PUBLIC_CONFIG.invite_required);
+  $("demoTip").style.display = "none";
+  $("btnCode").disabled = !PUBLIC_CONFIG.email_ready;
+  $("btnDemo").classList.toggle("hidden", !PUBLIC_CONFIG.demo_mode);
+  $("sDirectOption").classList.toggle("hidden", !PUBLIC_CONFIG.direct_mode);
+  if(!PUBLIC_CONFIG.direct_mode){
+    document.querySelector('input[name="sMode"][value="proxy"]').checked = true;
+  }
+}
+function validEmail(value){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value); }
+function startCodeCountdown(btn){
+  btn.disabled = true;
+  let t = 60;
+  btn.textContent = t + "s 后重发";
+  clearInterval(codeTimers.get(btn.id));
+  codeTimers.set(btn.id, setInterval(()=>{
+    t--;
+    if(t<=0){ clearInterval(codeTimers.get(btn.id)); btn.disabled = false; btn.textContent = "获取验证码"; }
+    else btn.textContent = t + "s 后重发";
+  }, 1000));
+}
+async function requestEmailCode(email, purpose, btnId, errId, codeId, tipId){
+  const err=$(errId), btn=$(btnId); err.textContent="";
+  if(!validEmail(email)) return err.textContent="请填写正确的邮箱地址";
+  btn.disabled=true; btn.textContent="正在发送…";
+  const d=await api("/api/email/send",{email,purpose});
+  if(!d.ok){ err.textContent=d.err||"验证码发送失败"; btn.disabled=false; btn.textContent="获取验证码"; return false; }
+  if(d.demo_code){
+    $(codeId).value=d.demo_code;
+    if(tipId){ $(tipId).style.display="block"; $(tipId).textContent=`演示验证码：${d.demo_code}（正式环境只发送到邮箱）`; }
+  }
+  toast("✉️ 验证码已发送"); startCodeCountdown(btn); return true;
+}
+async function sendRegisterEmail(){
+  await requestEmailCode($("rEmail").value.trim(),"register","btnCode","regErr","rCode","demoTip");
+}
+async function sendForgotEmail(){
+  await requestEmailCode($("fpEmail").value.trim(),"reset","btnForgotCode","forgotErr","fpCode","forgotDemoTip");
+}
+async function doRegister(){
+  const u = $("rUser").value.trim(), email = $("rEmail").value.trim(),
+        code = $("rCode").value.trim(), invitation = $("rInvite").value.trim(), p = $("rPwd").value;
+  $("regErr").textContent = "";
+  if(u.length < 2) return $("regErr").textContent = "用户名至少 2 位";
+  if(!validEmail(email)) return $("regErr").textContent = "请填写正确的邮箱地址";
+  if(PUBLIC_CONFIG.invite_required && !invitation) return $("regErr").textContent = "请输入管理员发放的邀请码";
+  if(code.length !== 6) return $("regErr").textContent = "请先获取并填写 6 位邮箱验证码";
+  if(p.length < 8) return $("regErr").textContent = "密码至少 8 位";
+  const d = await api("/api/register", {username: u, email, email_code: code, invitation, password: p});
+  if(!d.ok) return $("regErr").textContent = d.err||"注册失败";
+  toast("✅ 注册成功，已进入普通用户空间");
+  if(d.recovery_key) showRecoveryKey(d.recovery_key,"✅ 注册成功 · 保存恢复密钥");
+  sessionStorage.removeItem("keyshield_workspace");
+  await enterMain();
+}
+async function doRecoverPassword(){
+  const identifier=$("fpIdent").value.trim(), code=$("fpCode").value.trim(),
+        recovery_key=$("fpRecovery").value.trim(), new_password=$("fpPassword").value;
+  $("forgotErr").textContent="";
+  if(!identifier||code.length!==6||!recovery_key||new_password.length<8)
+    return $("forgotErr").textContent="请完整填写账号、验证码、恢复密钥和新密码";
+  const d=await api("/api/password/recover",{identifier,email_code:code,recovery_key,new_password});
+  if(!d.ok) return $("forgotErr").textContent=d.err||"密码重置失败";
+  toast("✅ 密码已重置，请重新登录"); switchAuth("login"); $("fUser").value=identifier; $("fPwd").value="";
+}
+function showAuth(){
+  $("mainScreen").classList.add("hidden"); $("workspaceScreen").classList.add("hidden");
+  $("purchaseScreen").classList.add("hidden"); $("authScreen").classList.remove("hidden");
+}
+async function doLogout(){ await api("/api/logout", {}); sessionStorage.removeItem("keyshield_workspace"); currentWorkspace=null; showAuth(); }
+
+function showRecoveryKey(value,title="✅ 请保存保险箱恢复密钥"){
+  $("recoveryTitle").textContent=title; $("recoveryValue").value=value; $("maskRecoveryKey").classList.remove("hidden");
+}
+async function copyRecoveryKey(){ await copySensitive($("recoveryValue").value,"恢复密钥",60); }
+function openAccountSecurity(){
+  $("accountErr").textContent=""; $("bindCode").value=""; $("bindPassword").value="";
+  $("accountEmailState").textContent=ME?.email_verified
+    ? `已验证邮箱：${ME.email_masked} · ${ME.recovery_ready?"恢复密钥已启用":"请完成恢复密钥初始化"}`
+    : "尚未绑定邮箱。绑定成功后会生成一次性保险箱恢复密钥。";
+  $("maskAccountSecurity").classList.remove("hidden");
+}
+async function sendBindEmail(){
+  await requestEmailCode($("bindEmail").value.trim(),"bind","btnBindCode","accountErr","bindCode",null);
+}
+async function bindAccountEmail(){
+  const email=$("bindEmail").value.trim(), email_code=$("bindCode").value.trim(), current_password=$("bindPassword").value;
+  $("accountErr").textContent="";
+  if(!validEmail(email)||email_code.length!==6||!current_password)
+    return $("accountErr").textContent="请填写邮箱、验证码和当前密码";
+  const d=await api("/api/email/bind",{email,email_code,current_password});
+  if(!d.ok) return $("accountErr").textContent=d.err||"邮箱绑定失败";
+  ME.email_verified=1; ME.email_masked=d.email_masked; ME.recovery_ready=1;
+  closeModal("maskAccountSecurity"); toast("✅ "+d.msg);
+  if(d.recovery_key) showRecoveryKey(d.recovery_key,"✅ 邮箱已绑定 · 保存恢复密钥");
+}
+async function sendStepupEmail(){
+  const d=await api("/api/email/send",{purpose:"stepup",email:""});
+  if(!d.ok){ toast(d.err||"验证码发送失败","err"); return null; }
+  toast("✉️ 二次验证码已发送到 "+(ME.email_masked||"绑定邮箱"));
+  return d.demo_code||true;
+}
+async function rotateRecoveryKeyFlow(){
+  if(!ME?.email_verified) return toast("请先绑定并验证邮箱","warn");
+  const sent=await sendStepupEmail(); if(!sent) return;
+  const email_code=prompt("请输入发送到绑定邮箱的 6 位验证码",typeof sent==="string"?sent:"");
+  if(!email_code) return;
+  const current_password=prompt("请输入当前密码，确认轮换恢复密钥");
+  if(!current_password) return;
+  const d=await api("/api/recovery-key",{email_code,current_password});
+  if(!d.ok) return toast(d.err||"恢复密钥轮换失败","err");
+  closeModal("maskAccountSecurity"); ME.recovery_ready=1; showRecoveryKey(d.recovery_key,"✅ 新恢复密钥已生成");
+}
+
+/* ---------- 主界面 ---------- */
+async function enterMain(){
+  const d = await api("/api/me");
+  ME = d.user;
+  $("authScreen").classList.add("hidden");
+  $("meName").textContent = ME.username;
+  $("meRole").textContent = ME.role==="admin"?"管理员":"教职工";
+  const enterprise = $("enterpriseWorkspace");
+  enterprise.classList.remove("locked");
+  enterprise.querySelector(".ws-enter span:first-child").textContent = ME.role==="admin" ? "进入治理后台" : "进入组织空间";
+  const saved = sessionStorage.getItem("keyshield_workspace");
+  if(saved) await chooseWorkspace(saved);
+  else showWorkspaceSelector();
+}
+function showWorkspaceSelector(){
+  $("authScreen").classList.add("hidden"); $("mainScreen").classList.add("hidden"); $("purchaseScreen").classList.add("hidden");
+  $("workspaceScreen").classList.remove("hidden"); window.scrollTo({top:0,behavior:"smooth"});
+}
+async function chooseWorkspace(mode){
+  if(!["personal","team","enterprise"].includes(mode)) return;
+  currentWorkspace=mode; sessionStorage.setItem("keyshield_workspace",mode);
+  if(mode==="enterprise"){
+    await showCampusPurchase();
+    return;
+  }
+  configureWorkspace(mode);
+  $("workspaceScreen").classList.add("hidden"); $("purchaseScreen").classList.add("hidden"); $("mainScreen").classList.remove("hidden");
+  switchTab(mode==="team" ? "teams" : "dash");
+  await refreshAll();
+}
+const CAMPUS_PLAN_NAMES = {self_hosted:"安装包本地部署",assisted:"协助部署"};
+function selectCampusPlan(plan){
+  if(!CAMPUS_PLAN_NAMES[plan]) return;
+  if(CAMPUS_SUBSCRIPTION?.status==="active" && CAMPUS_SUBSCRIPTION.plan!==plan){
+    toast("当前订阅已生效，如需变更方案请联系我们", "warn");
+    return;
+  }
+  selectedCampusPlan=plan;
+  renderCampusSubscription();
+}
+function campusMailto(plan=selectedCampusPlan){
+  const subject=`钥盾 KeyShield 校园部署咨询 - ${CAMPUS_PLAN_NAMES[plan]}`;
+  return `mailto:${CAMPUS_CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}`;
+}
+function renderCampusSubscription(){
+  const active=CAMPUS_SUBSCRIPTION?.status==="active";
+  if(active) selectedCampusPlan=CAMPUS_SUBSCRIPTION.plan;
+  const selfSelected=selectedCampusPlan==="self_hosted";
+  $("purchaseSelfHosted").classList.toggle("selected",selfSelected);
+  $("purchaseSelfHosted").setAttribute("aria-checked",String(selfSelected));
+  $("purchaseAssisted").classList.toggle("selected",!selfSelected);
+  $("purchaseAssisted").setAttribute("aria-checked",String(!selfSelected));
+  $("subscriptionBadge").textContent=active?"订阅已生效":"尚未订阅";
+  $("subscriptionBadge").classList.toggle("active",active);
+  $("purchaseActionTitle").textContent=active
+    ? `${CAMPUS_PLAN_NAMES[selectedCampusPlan]}已开通`
+    : `开通${CAMPUS_PLAN_NAMES[selectedCampusPlan]}`;
+  $("inactiveSubscriptionActions").classList.toggle("hidden",active);
+  $("activeSubscriptionActions").classList.toggle("hidden",!active);
+  $("demoSubscribeButton").classList.toggle("hidden",CAMPUS_BILLING_MODE!=="demo");
+  $("purchaseActionText").textContent=active
+    ? "安装包下载权限已经解锁。你可以先下载留档，也可以直接进入校园服务后台。"
+    : CAMPUS_BILLING_MODE==="demo"
+      ? "当前为本地演示环境，可模拟开通订阅并验证安装包下载，不会产生任何费用。"
+      : "正式订阅需先确认学校规模、交付范围与服务内容，请通过邮箱联系我们开通。";
+  $("contactSubscribeLink").href=campusMailto();
+  $("campusContactLink").href=campusMailto();
+}
+async function showCampusPurchase(){
+  $("authScreen").classList.add("hidden"); $("workspaceScreen").classList.add("hidden"); $("mainScreen").classList.add("hidden");
+  $("purchaseScreen").classList.remove("hidden"); window.scrollTo({top:0,behavior:"smooth"});
+  const d=await api("/api/subscription");
+  if(!d.ok){ toast(d.err||"订阅状态读取失败","err"); return; }
+  CAMPUS_SUBSCRIPTION=d.subscription;
+  CAMPUS_BILLING_MODE=d.billing_mode||"contact";
+  CAMPUS_CONTACT_EMAIL=d.contact_email||"1287585727@qq.com";
+  if(CAMPUS_SUBSCRIPTION?.plan) selectedCampusPlan=CAMPUS_SUBSCRIPTION.plan;
+  renderCampusSubscription();
+}
+async function activateCampusSubscription(){
+  const button=$("demoSubscribeButton");
+  button.disabled=true; button.textContent="正在开通…";
+  const d=await api("/api/subscription/activate-demo",{plan:selectedCampusPlan});
+  button.disabled=false; button.textContent="演示开通订阅（不产生费用）";
+  if(!d.ok) return toast(d.err||"订阅开通失败","err");
+  CAMPUS_SUBSCRIPTION=d.subscription;
+  renderCampusSubscription();
+  toast("订阅已生效，安装包已解锁");
+}
+async function enterEnterpriseBackend(){
+  if(CAMPUS_SUBSCRIPTION?.status!=="active") return toast("请先完成订阅开通","warn");
+  currentWorkspace="enterprise"; sessionStorage.setItem("keyshield_workspace","enterprise");
+  configureWorkspace("enterprise");
+  $("purchaseScreen").classList.add("hidden"); $("mainScreen").classList.remove("hidden");
+  switchTab("dash"); await refreshAll(); window.scrollTo({top:0,behavior:"smooth"});
+}
+function configureWorkspace(mode){
+  const configs={
+    personal:{icon:"♙",name:"个人空间",color:"#1769e0",kicker:"PERSONAL · 个人服务台",title:"你的密钥，只属于你的保险箱",desc:"使用独立数据密钥保护个人凭据，查看、复制、编辑和轮换全部记录在案。",primary:"＋ 添加个人密钥",secondary:"查看审计记录",scope:"私有",keyMode:"独立 DEK",guideTitle:"📌 个人空间使用指南",guideSub:"—— 安全地保存每一把密钥",guide:"<b style='color:var(--accent2)'>个人空间</b>用于保存你自己的 API Key。每位用户拥有独立的数据密钥，其他用户和管理员都不能通过业务接口查看你的保险箱；查看、复制和轮换会留下审计记录。"},
+    team:{icon:"♟",name:"团队空间",color:"#6c5ce7",kicker:"TEAM · 团队服务台",title:"共享使用权，不共享真实密钥",desc:"班级项目主管理者支配密钥与成员、成员领用代调用;科研小组全员协作、共享各家厂商 API。",primary:"我的团队",secondary:"团队用量",scope:"协作",keyMode:"代理调用",guideTitle:"📌 团队空间使用指南",guideSub:"—— 共享使用权，不共享真实密钥",guide:"<b style='color:#6c5ce7'>团队空间</b>支持两种协作模式:<b>🏫 班级项目</b>由主管理者支配——成员凭入队码申请或由主管理者直加(可设有效期),领用后由服务器代调用、Key 不下发,成员不能添加/修改;<b>🔬 科研小组</b>全员可添加/调用/编辑/删除,共享多家厂商 API。每次调用都计入团队用量统计。"},
+    enterprise:{icon:"▦",name:"学校 / 企业",color:"#f5b73d",kicker:"CAMPUS · 组织资源中心",title:"统一使用学校与企业的 AI 资源",desc:"组织成员可以领用并安全调用统一采购的模型资源；管理员额外负责密钥托管、用户管理与全站审计。",primary:"查看组织密钥",secondary:"我的使用记录",scope:"全组织",keyMode:"代理调用",guideTitle:"📌 学校 / 企业使用指南",guideSub:"—— 统一资源、按角色治理",guide:"<b style='color:var(--gold)'>学校 / 企业空间</b>向所有登录用户开放。普通成员可以领用组织资源并通过服务器安全代调用，真实密钥不会暴露；管理员还可以托管密钥、管理用户并查看全站审计。"}
+  };
+  const c=configs[mode];
+  $("workspaceIcon").textContent=c.icon; $("workspaceName").textContent=c.name;
+  $("bizHero").style.setProperty("--space-color",c.color); $("bizKicker").textContent=c.kicker;
+  $("bizTitle").textContent=c.title; $("bizDesc").textContent=c.desc; $("healthScope").textContent=c.scope; $("healthMode").textContent=c.keyMode;
+  $("bizPrimary").textContent=c.primary; $("bizSecondary").textContent=c.secondary;
+  $("guideTitle").innerHTML=`${c.guideTitle}<span class="sub">${c.guideSub}</span>`; $("guideText").innerHTML=c.guide;
+  const enterpriseAdmin=mode==="enterprise"&&ME.role==="admin";
+  if(enterpriseAdmin){
+    $("bizPrimary").textContent="托管新密钥"; $("bizSecondary").textContent="用户管理";
+  }
+  $("statKeyLabel").textContent=enterpriseAdmin?"管理员保险箱":"我的密钥";
+  $("statKeySub").textContent=mode==="personal"?"个人保险箱内":"当前账号私有";
+  $("statSharedLabel").textContent=mode==="personal"?"可用组织资源":mode==="team"?"团队可领用":"组织托管密钥";
+  $("statSharedSub").textContent=mode==="enterprise"?(enterpriseAdmin?"全组织统一管理":"可申请领用"):"学校统一发放";
+  $("statOpsLabel").textContent=enterpriseAdmin?"全站操作记录":"操作记录";
+  $("statOpsSub").textContent=enterpriseAdmin?"管理员可见全站":"当前账号审计";
+  $("tabUsers").classList.toggle("hidden",!(mode==="enterprise"&&ME.role==="admin"));
+  $("btnAddShared").classList.toggle("hidden",!(mode==="enterprise"&&ME.role==="admin"));
+  $("tabTeams").classList.toggle("hidden", mode!=="team");
+  document.querySelector('[data-t="shared"]').classList.toggle("hidden",mode==="personal");
+  if(mode==="personal"){
+    $("bizPrimary").onclick=()=>openEdit(null); $("bizSecondary").onclick=()=>switchTab("logs");
+  }else if(mode==="team"){
+    $("bizPrimary").onclick=()=>switchTab("teams"); $("bizSecondary").onclick=()=>switchTab("usage");
+  }else{
+    if(enterpriseAdmin){
+      $("bizPrimary").onclick=()=>openEditShared(); $("bizSecondary").onclick=()=>switchTab("users");
+    }else{
+      $("bizPrimary").onclick=()=>switchTab("shared"); $("bizSecondary").onclick=()=>switchTab("usage");
+    }
+  }
+}
+function switchTab(t){
+  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on", b.dataset.t===t));
+  ["dash","keys","shared","tokens","usage","logs","users","teams","team"].forEach(v=>$("view-"+v).classList.toggle("hidden", v!==t));
+  if(t==="dash") refreshDashRecent();
+  if(t==="users") renderUsers();
+  if(t==="shared") renderShared();
+  if(t==="usage") renderUsage();
+  if(t==="tokens") renderVirtualKeys();
+  if(t==="teams") renderTeams();
+  if(t==="team"){ renderTeamKeys(); renderTeamMembers(); renderTeamUsage(); }
+}
+async function refreshAll(){
+  const [e, sh, logs, usage, teams, virtualKeys] = await Promise.all([api("/api/entries"), api("/api/shared"), api("/api/logs"), api("/api/usage"), api("/api/teams"), api("/api/virtual-keys")]);
+  window._entries = e.entries;
+  window._shared = sh.shared;
+  window._logs = logs.logs;
+  window._usage = usage.usage||[]; window._usageSummary = usage.summary||{};
+  window._teams = teams.ok ? teams.teams : [];
+  window._virtualKeys = virtualKeys.ok ? virtualKeys.virtual_keys : [];
+  window._virtualBaseUrl = virtualKeys.base_url || `${location.origin}/v1`;
+  window._auditIntegrity = logs.integrity || null;
+  renderStats(); renderChips(); renderKeys(); renderLogs(); renderShared(); renderVirtualKeys(); renderUsage(); refreshDashRecent();
+  if(ME.role==="admin") renderUsers();
+  if(currentWorkspace==="team") renderTeams();
+}
+
+/* ---------- 仪表盘 ---------- */
+function renderStats(){
+  $("stTotal").textContent = (window._entries||[]).length;
+  $("stCats").textContent = new Set((window._entries||[]).map(e=>e.cat)).size;
+  $("stShared").textContent = (window._shared||[]).length;
+  $("stOps").textContent = (window._logs||[]).length;
+  $("cntKeys").textContent = (window._entries||[]).length;
+}
+function refreshDashRecent(){
+  const items = (window._logs||[]).slice(0,6);
+  $("dashRecent").innerHTML = items.length ? items.map(l=>`
+    <div class="recent-row" style="display:flex;gap:10px;align-items:center;padding:9px 4px;border-bottom:1px solid var(--line);font-size:13.5px">
+      <span style="color:var(--txt3);font-size:12px;width:140px;flex-shrink:0">${l.time}</span>
+      <span class="${logActionClass(l.action)}">${esc(l.action)}</span>
+      <span style="font-family:var(--mono);font-size:12.5px">${esc(l.target)}</span>
+      <span style="color:var(--txt3);font-size:12.5px;margin-left:auto;text-align:right">${esc(l.detail||"")}</span>
+    </div>`).join("") : `<div style="color:var(--txt3);text-align:center;padding:20px">暂无操作记录</div>`;
+}
+
+/* ---------- 我的密钥 ---------- */
+function renderChips(){
+  const cats = ["全部", ...Object.keys((window._entries||[]).reduce((a,e)=>{a[e.cat||"未分类"]=1;return a},{}))];
+  $("chipFilters").innerHTML = cats.map(c=>`<span class="chip ${activeCat===c?"on":""}" data-cat="${esc(c)}">${esc(c)}</span>`).join("");
+  $("chipFilters").querySelectorAll(".chip").forEach(el=>el.addEventListener("click", ()=>setCat(el.dataset.cat)));
+}
+function setCat(c){ activeCat=c; renderChips(); renderKeys(); }
+function renderKeys(){
+  const kw = $("kw").value.trim().toLowerCase();
+  const list = (window._entries||[]).filter(e=>{
+    if(activeCat!=="全部" && (e.cat||"未分类")!==activeCat) return false;
+    if(kw && !(e.name+e.cat+e.note).toLowerCase().includes(kw)) return false;
+    return true;
+  });
+  const box = $("klist");
+  if(!list.length){
+    box.innerHTML = `<div class="empty"><div class="big">🗝️</div>${(window._entries||[]).length?"没有匹配的密钥":"保险箱还是空的<br>点上方「➕ 添加密钥」或用「✨ 演示数据」"}</div>`;
+    return;
+  }
+  box.innerHTML = list.map(e=>{
+    const expInfo = e.expire ? (()=>{
+      const days = Math.ceil((Date.parse(e.expire)-Date.parse(new Date().toDateString()))/864e5);
+      if(days<0) return `<span class="exp alert">⚠ 已过期 ${-days} 天</span>`;
+      if(days<=7) return `<span class="exp warn">⏳ ${days} 天后到期</span>`;
+      return `<span class="exp ok">✅ ${days} 天内有效</span>`;
+    })() : `<span class="exp ok">长期</span>`;
+    return `<div class="kcard">
+      <div class="top">
+        <div class="ic">${catIcon(e.cat)}</div>
+        <div class="nm">${esc(e.name)}<span class="cat">${esc(e.cat||"未分类")}</span></div>
+      </div>
+      <div class="val"><span id="val-${e.id}">${esc(e.mask)}</span><span class="m">
+        <button onclick="reveal(${e.id})" title="查看">👁</button>
+        <button onclick="copyEntry(${e.id})" title="复制">📋</button>
+      </span></div>
+      <div class="meta">${expInfo}<span>更新 ${e.updated}</span>${e.history_len?`<span>🔄 已轮换×${e.history_len}</span>`:""}</div>
+      <div class="ops">
+        <button class="btn sm ghost" onclick="openRotate(${e.id})">🔄 轮换</button>
+        <button class="btn sm ghost" onclick="openEdit(${e.id})">✏️ 编辑</button>
+        <button class="btn sm danger" onclick="askDelete(${e.id})">🗑 删除</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+function catIcon(cat){
+  const m={"DeepSeek":"🐳","高德":"🗺","君道AI":"🎨","Ollama":"📦","通义千问":"☁️","文心一言":"🖋","校园服务":"🏫","其他":"🔧",
+    "OpenAI":"✨","Claude":"🟠","Gemini":"🪐","Kimi":"🌙","火山引擎":"🌋","智谱清言":"🧠","讯飞星火":"⚡","MiniMax":"🚀","硅基流动":"💠","百度地图":"🧭","腾讯地图":"📍"};
+  return m[cat]||"🔑";
+}
+async function reveal(id){
+  const d = await api(`/api/entries/${id}/reveal`, {});
+  if(!d.ok) return toast(d.err||"查看失败","err");
+  $("viewValue").textContent = d.value;
+  viewId = id;
+  $("maskView").classList.remove("hidden");
+  clearTimeout(revealTimer);
+  revealTimer = setTimeout(()=>closeModal("maskView"), 20000);
+}
+async function copyEntry(id){
+  const d = await api(`/api/entries/${id}/reveal`, {});
+  if(!d.ok) return toast(d.err||"失败","err");
+  await copySensitive(d.value,"密钥",30);
+}
+function copyFromView(){ copyEntry(viewId); }
+
+/* ---------- 添加/编辑 ---------- */
+function openEdit(id){
+  editingId = id;
+  const e = id ? (window._entries||[]).find(x=>x.id===id) : null;
+  $("editTitle").textContent = e ? "✏️ 编辑密钥" : "➕ 添加密钥";
+  $("fName").value = e?.name||""; $("fCat").value = e?.cat||""; $("fExpire").value = e?.expire||"";
+  $("fValue").value = ""; $("fNote").value = e?.note||"";
+  $("fValue").placeholder = e ? "(留空则保持原值)" : "sk-xxx...";
+  $("maskEdit").classList.remove("hidden");
+}
+async function saveEntry(){
+  const name = $("fName").value.trim(), value = $("fValue").value.trim();
+  const cat = $("fCat").value || "其他";
+  if(!name) return toast("名称不能为空","warn");
+  if(!editingId && !value) return toast("密钥内容不能为空","warn");
+  if(value){
+    const err = validateKeyFormat(cat, value);
+    if(err) return toast("⚠️ 格式不符: " + err, "warn", 4200);
+  }
+  const payload = {name, cat, note: $("fNote").value.trim(), expire: $("fExpire").value};
+  if(value) payload.value = value;
+  const d = editingId ? await api(`/api/entries/${editingId}`, payload, "PUT") : await api("/api/entries", payload);
+  if(!d.ok) return toast(d.err||"保存失败","err");
+  closeModal("maskEdit");
+  await refreshAll();
+  toast(editingId?"✏️ 已保存":"✅ 已入库加密保护");
+}
+
+/* ---------- 删除/轮换 ---------- */
+async function askDelete(id){
+  const e = (window._entries||[]).find(x=>x.id===id);
+  if(!confirm(`确定删除「${e.name}」吗?此操作不可恢复。`)) return;
+  await api(`/api/entries/${id}`, {}, "DELETE");
+  await refreshAll();
+  toast("🗑 已删除");
+}
+function openRotate(id){
+  rotTarget = id; $("rotValue").value = "";
+  $("maskRotate").classList.remove("hidden");
+}
+function genKey(){
+  const chars="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let s=""; for(let i=0;i<32;i++) s+=chars[Math.floor(Math.random()*chars.length)];
+  $("rotValue").value = "sk-"+s;
+}
+async function doRotate(){
+  const v = $("rotValue").value.trim();
+  if(!v) return toast("请填新密钥或点🎲生成","warn");
+  const d = await api(`/api/entries/${rotTarget}/rotate`, {value:v});
+  if(!d.ok) return toast(d.err||"轮换失败","err");
+  closeModal("maskRotate"); rotTarget=null;
+  await refreshAll();
+  toast("🔄 轮换完成!旧密钥已作废计入历史");
+}
+
+/* ---------- 托管中心 ---------- */
+async function renderShared(){
+  const sh = window._shared||[];
+  $("sharedFilters").innerHTML = `<span style="font-size:13px;color:var(--txt3);padding:4px 0">共 ${sh.length} 项托管密钥</span>`;
+  const box = $("sharedList");
+  if(!sh.length){
+    box.innerHTML = `<div class="empty"><div class="big">🏦</div>${ME&&ME.role==="admin"?"还没有托管密钥,点右上「🏦 托管新密钥」入库":"暂无学校托管密钥"}</div>`;
+    return;
+  }
+  box.innerHTML = sh.map(k=>{
+    let btns = "";
+    if(k.granted){
+      if(k.mode === "direct")
+        btns += `<button class="btn sm" onclick="revealShared(${k.id})">🔓 查看密钥</button>`;
+      else
+        btns += `<button class="btn sm ghost" onclick="useShared(${k.id})">🚀 使用</button>`;
+      if(k.mode === "proxy") btns += `<button class="btn sm ghost" onclick="openVirtualKey(${k.id})">🪪 创建 ks_</button>`;
+      btns += `<span style="font-size:12px;color:var(--accent2)">✅ 已领用</span>`;
+    }else{
+      btns += `<button class="btn sm ghost" onclick="grantShared(${k.id})">📥 领用</button>`;
+    }
+    if(ME&&ME.role==="admin") btns += `<button class="btn sm danger" onclick="deleteShared(${k.id})">🗑 撤销</button>`;
+    return `<div class="kcard">
+      <div class="top">
+        <div class="ic">${catIcon(k.cat)}</div>
+        <div class="nm">${esc(k.name)}<span class="cat">${esc(k.cat||"其他")}</span></div>
+      </div>
+      <div class="val"><span>${esc(k.mask)}</span></div>
+      <div class="meta"><span class="exp ok">🏦 学校托管</span><span class="exp ${k.mode==="direct"?"warn":"ok"}">${k.mode==="direct"?"📤 直接下发":"🔒 仅代调用"}</span>${k.model?`<span>🤖 ${esc(k.model)}</span>`:""}<span>${esc(k.note)}</span></div>
+      <div class="ops">${btns}</div>
+    </div>`;
+  }).join("");
+}
+async function useShared(kid){
+  const key = (window._shared||[]).find(item=>item.id===kid);
+  chatTarget = {scope:"shared", kid};
+  $("chatTitle").textContent = `🚀 安全调用 · ${key?.name||"共享资源"}`;
+  $("chatPrompt").value = "";
+  $("chatAnswer").textContent = "";
+  $("chatAnswerWrap").classList.add("hidden");
+  $("btnChatSend").disabled = false;
+  $("btnChatSend").textContent = "🚀 安全调用";
+  $("maskChat").classList.remove("hidden");
+  setTimeout(()=>$("chatPrompt").focus(),100);
+}
+async function sendSharedPrompt(){
+  const prompt = $("chatPrompt").value.trim();
+  if(!prompt) return toast("请先输入要发送给模型的问题","warn");
+  const btn = $("btnChatSend"); btn.disabled=true; btn.textContent="正在通过钥盾调用…";
+  const url = chatTarget?.scope==="team"
+    ? `/api/teams/${chatTarget.tid}/keys/${chatTarget.kid}/use`
+    : `/api/shared/${chatTarget?.kid||""}/use`;
+  const d = await api(url, {prompt});
+  btn.disabled=false; btn.textContent="🚀 再次调用";
+  if(!d.ok) return toast((d.err||"调用失败")+(d.request_id?` · ${d.request_id}`:""),"err",5200);
+  $("chatAnswer").textContent = d.answer||d.msg||"调用完成";
+  const usage=d.usage||{};
+  $("chatMeta").textContent=`请求号 ${d.request_id} · ${d.provider||"演示"} / ${d.model||"默认模型"} · ${usage.total_tokens||0} Token · ${d.latency_ms||0} ms`;
+  $("chatAnswerWrap").classList.remove("hidden");
+  await refreshAll();
+  toast("🚀 调用完成，Key 未下发");
+}
+async function revealShared(kid){
+  const d = await api(`/api/shared/${kid}/reveal`, {});
+  if(!d.ok) return toast(d.err||"查看失败","err");
+  $("viewValue").textContent = d.value;
+  viewId = null;
+  $("maskView").classList.remove("hidden");
+  toast("📤 真 key 已下发展示(审计已记录)");
+}
+async function grantShared(kid){
+  const d = await api(`/api/shared/${kid}/grant`, {});
+  if(!d.ok) return toast(d.err||"领用失败","warn");
+  toast("📥 已领用!系统将代你调用,key 不下发到你电脑");
+}
+async function deleteShared(kid){
+  if(!confirm("撤销该托管密钥?所有领用立即失效。")) return;
+  await api(`/api/shared/${kid}`, {}, "DELETE");
+  await refreshAll();
+  toast("🗑 已撤销托管");
+}
+function openEditShared(){
+  $("sName").value=""; $("sCat").value="DeepSeek"; $("sNote").value=""; $("sValue").value="";
+  $("sModel").value="deepseek-v4-flash";
+  document.querySelector('input[name="sMode"][value="proxy"]').checked=true;
+  $("maskShared").classList.remove("hidden");
+}
+async function saveShared(){
+  const name=$("sName").value.trim(), value=$("sValue").value.trim();
+  const cat = $("sCat").value || "其他";
+  const mode = document.querySelector('input[name="sMode"]:checked').value;
+  if(!name||!value) return toast("名称和密钥内容不能为空","warn");
+  const err = validateKeyFormat(cat, value);
+  if(err) return toast("⚠️ 格式不符: " + err, "warn", 4200);
+  const d = await api("/api/shared", {name, cat, mode, model:$("sModel").value.trim(), note:$("sNote").value.trim(), value});
+  if(!d.ok) return toast(d.err||"失败","err");
+  closeModal("maskShared");
+  await refreshAll();
+  toast("🏦 已托管,全体用户可见");
+}
+
+/* ---------- 成员专属虚拟 Key ---------- */
+function openVirtualKey(keyId){
+  const resource=(window._shared||[]).find(k=>k.id===keyId)||(window._teamKeys||[]).find(k=>k.id===keyId);
+  $("vkResourceId").value=keyId;
+  $("vkResourceName").textContent=resource?.name||`资源 #${keyId}`;
+  $("vkName").value="我的开发工具";
+  $("vkDays").value="7";
+  $("vkDaily").value="50";
+  $("maskVirtualKey").classList.remove("hidden");
+}
+async function createVirtualKey(){
+  const key_id=Number($("vkResourceId").value), days=Number($("vkDays").value), daily_limit=Number($("vkDaily").value);
+  if(!Number.isInteger(key_id)||!Number.isInteger(days)||!Number.isInteger(daily_limit)) return toast("请填写整数有效期和额度","warn");
+  const d=await api("/api/virtual-keys",{key_id,name:$("vkName").value.trim(),days,daily_limit});
+  if(!d.ok) return toast(d.err||"虚拟 Key创建失败","err");
+  closeModal("maskVirtualKey");
+  $("vkResultKey").value=d.api_key;
+  $("vkResultBase").value=d.base_url;
+  $("vkResultModel").value=d.model;
+  $("maskVirtualResult").classList.remove("hidden");
+  await refreshAll();
+  toast("🪪 虚拟 Key已创建，仅显示一次");
+}
+async function copyVirtualResult(){
+  await copySensitive($("vkResultKey").value,"虚拟 Key",30);
+}
+async function revokeVirtualKey(id){
+  if(!confirm("撤销后，使用该虚拟 Key的脚本会立即无法调用。确定撤销吗？")) return;
+  const d=await api(`/api/virtual-keys/${id}`,{},"DELETE");
+  if(!d.ok) return toast(d.err||"撤销失败","err");
+  await refreshAll();
+  toast("🚫 虚拟 Key已立即撤销");
+}
+function renderVirtualKeys(){
+  if(!$("virtualKeyBody")) return;
+  $("virtualBaseUrl").textContent=window._virtualBaseUrl||`${location.origin}/v1`;
+  const rows=window._virtualKeys||[];
+  $("virtualKeyBody").innerHTML=rows.map(k=>{
+    const status=k.status==="active"?'<span style="color:var(--accent2)">✅ 有效</span>':k.status==="expired"?'<span style="color:var(--red)">⌛ 已过期</span>':'<span style="color:var(--red)">🚫 已撤销</span>';
+    return `<tr><td>${esc(k.name)}<div style="font-family:var(--mono);font-size:11px;color:var(--txt3)">${esc(k.token_prefix)}…</div></td>
+      <td>${esc(k.scope)}<div style="font-size:11px;color:var(--txt3)">${esc(k.resource_name)}</div></td>
+      <td style="font-family:var(--mono);font-size:11px">${esc(k.model||"—")}</td><td>${esc(k.expires_at)}</td>
+      <td>${Number(k.daily_limit)} 次</td><td>${esc(k.last_used_at||"从未")}</td><td>${status}</td>
+      <td>${k.status==="active"?`<button class="btn sm danger" onclick="revokeVirtualKey(${k.id})">撤销</button>`:"—"}</td></tr>`;
+  }).join("")||`<tr><td colspan="8" style="text-align:center;color:var(--txt3);padding:30px">暂无虚拟 Key；请从已领用的代理资源创建</td></tr>`;
+}
+
+/* ---------- 审计日志 ---------- */
+function logActionClass(action){
+  const value=String(action||"");
+  if(value.includes("删除")) return "log-action is-delete";
+  if(value.includes("轮换团队密钥")) return "log-action is-team-rotate";
+  if(value.includes("轮换")) return "log-action is-rotate";
+  return "log-action";
+}
+function renderLogs(){
+  const integrity=window._auditIntegrity;
+  $("auditIntegrity").innerHTML=integrity
+    ? integrity.ok?` · <b style="color:var(--accent2)">✅ 哈希链完整（${Number(integrity.checked)}条）</b>`:` · <b style="color:var(--red)">⚠ 完整性异常：${esc(integrity.reason)}</b>`
+    : "";
+  $("logBody").innerHTML = (window._logs||[]).slice(0,200).map(l=>`
+    <tr><td style="font-size:12px">${esc(l.user_id||"—")}</td>
+    <td style="font-size:12.5px">${l.time}</td>
+    <td><span class="${logActionClass(l.action)}">${esc(l.action)}</span></td>
+    <td style="font-family:var(--mono);font-size:12.5px">${esc(l.target)}</td>
+    <td style="font-size:12.5px">${esc(l.detail||"")}</td></tr>`).join("") || `<tr><td colspan="5" style="text-align:center;color:var(--txt3);padding:30px">暂无日志</td></tr>`;
+}
+
+/* ---------- API 用量归属 ---------- */
+function renderUsage(){
+  const rows=window._usage||[], summary=window._usageSummary||{};
+  $("usageCalls").textContent=Number(summary.calls||0).toLocaleString();
+  $("usageSuccess").textContent=Number(summary.successful||0).toLocaleString();
+  $("usageTokens").textContent=Number(summary.tokens||0).toLocaleString();
+  $("usageBody").innerHTML=rows.map(r=>{
+    const state=r.status==="success"||r.status==="demo"?"✅ "+(r.status==="demo"?"演示":"成功"):r.status==="pending"?"⏳ 处理中":"⚠️ 失败";
+    return `<tr>
+      <td><div style="font-size:12.5px">${esc(r.started)}</div><div style="font-family:var(--mono);font-size:10.5px;color:var(--txt3)">${esc(r.request_id)}</div></td>
+      <td>${esc(r.username||("用户#"+r.user_id))}</td><td>${esc(r.key_name||("资源#"+r.key_id))}</td>
+      <td>${esc(r.provider)}<div style="font-size:11px;color:var(--txt3)">${esc(r.model)}</div></td>
+      <td>${Number(r.total_tokens||0).toLocaleString()}</td><td>${Number(r.latency_ms||0)} ms</td>
+      <td>${state}${r.error_code?`<div style="font-size:10.5px;color:var(--txt3)">${esc(r.error_code)}</div>`:""}</td></tr>`;
+  }).join("")||`<tr><td colspan="7" style="text-align:center;color:var(--txt3);padding:30px">暂无 API 调用记录</td></tr>`;
+}
+
+/* ---------- 我的团队(两种协作模式) ---------- */
+let currentTeam = null, editingTeamKey = null;
+
+function openCreateTeam(){
+  $("ctName").value="";
+  document.querySelector('input[name="ctMode"][value="class"]').checked=true;
+  $("maskCreateTeam").classList.remove("hidden");
+  setTimeout(()=>$("ctName").focus(),100);
+}
+async function createTeam(){
+  const name=$("ctName").value.trim(), mode=document.querySelector('input[name="ctMode"]:checked').value;
+  if(!name) return toast("请填写团队名称","warn");
+  const d=await api("/api/teams",{name,mode});
+  if(!d.ok) return toast(d.err||"创建失败","err");
+  closeModal("maskCreateTeam");
+  await refreshAll();
+  toast(`✅ 团队已创建,入队码 ${d.join_code}(可在团队页复制)`);
+  openTeam(d.id);
+}
+async function joinTeamByCode(){
+  const code=$("joinCodeInput").value.trim();
+  if(!code) return toast("请输入入队码","warn");
+  const d=await api("/api/teams/join-by-code",{join_code:code});
+  if(!d.ok) return toast(d.err||"申请失败","warn");
+  $("joinCodeInput").value="";
+  toast(`📥 已向「${d.team_name}」提交申请,等待主管理者审核`);
+}
+function renderTeams(){
+  const teams=window._teams||[], box=$("teamGrid");
+  if(!teams.length){
+    box.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="big">👥</div>还没有团队<br>点右上「➕ 创建团队」,或向主管理者索要入队码加入</div>`;
+    return;
+  }
+  box.innerHTML=teams.map(t=>`
+    <div class="team-card" onclick="openTeam(${t.id})">
+      <div class="tc-top">
+        <div class="tc-ic">${t.mode==="research"?"🔬":"🏫"}</div>
+        <h3>${esc(t.name)}</h3>
+        <span class="tc-mode ${t.mode}">${t.mode==="research"?"科研协作":"班级管控"}</span>
+      </div>
+      <div class="tc-desc">${t.role==="leader"?"你是 👑 主管理者,负责支配密钥与成员":t.expired?"你的成员身份已过期,操作将被拦截":"你是团队成员,可领用并代调用"}</div>
+      <div class="tc-meta">
+        <span>👥 <b>${t.member_count}</b> 人</span>
+        <span>🕒 ${esc(t.created)}</span>
+        ${t.expired?'<span style="color:var(--red)">⚠ 身份已过期</span>':""}
+      </div>
+    </div>`).join("");
+}
+async function openTeam(tid){
+  const d=await api(`/api/teams/${tid}`);
+  if(!d.ok) return toast(d.err||"进入团队失败","err");
+  currentTeam=d.team;
+  $("teamTitle").innerHTML=`${currentTeam.mode==="research"?"🔬":"🏫"} ${esc(currentTeam.name)} <span style="font-size:12px;font-weight:500;color:var(--txt3)">${currentTeam.mode==="research"?"科研协作 · 全员可增改调删":"班级管控 · 主管理者支配"}</span>`;
+  $("teamJoinCode").textContent=currentTeam.join_code?`🔗 入队码 ${currentTeam.join_code} · 点击复制`:"";
+  $("btnAddTeamKey").classList.toggle("hidden", !(currentTeam.mode==="research" || currentTeam.is_leader));
+  $("btnAddTeamMember").classList.toggle("hidden", !currentTeam.is_leader);
+  switchTab("team");
+  switchTeamSub("keys");
+  await refreshTeamData();
+}
+function backToTeams(){ switchTab("teams"); }
+async function copyTeamCode(){
+  if(!currentTeam?.join_code) return;
+  await copySensitive(currentTeam.join_code,"入队码",30);
+}
+function switchTeamSub(sub){
+  document.querySelectorAll(".tsb").forEach(b=>b.classList.toggle("on",b.dataset.ts===sub));
+  $("teamSubKeys").classList.toggle("hidden",sub!=="keys");
+  $("teamSubMembers").classList.toggle("hidden",sub!=="members");
+  $("teamSubUsage").classList.toggle("hidden",sub!=="usage");
+  if(sub==="keys") renderTeamKeys();
+  if(sub==="members") renderTeamMembers();
+  if(sub==="usage") renderTeamUsage();
+}
+async function refreshTeamData(){
+  if(!currentTeam) return;
+  const [keys, usage] = await Promise.all([
+    api(`/api/teams/${currentTeam.id}/keys`),
+    api(`/api/teams/${currentTeam.id}/usage`)
+  ]);
+  window._teamKeys = keys.ok ? keys.keys : [];
+  window._teamUsage = usage.ok ? usage : {members:[],summary:{},key_count:0};
+  renderTeamKeys(); renderTeamUsage();
+}
+function renderTeamKeys(){
+  const t=currentTeam; if(!t) return;
+  const keys=window._teamKeys||[], box=$("teamSubKeys");
+  if(!keys.length){
+    box.innerHTML=`<div class="empty"><div class="big">🔑</div>${t.is_leader?"还没有团队密钥,点右上「➕ 添加团队密钥」":t.mode==="research"?"还没有团队密钥,任何成员都可以添加":"主管理者还未添加团队密钥"}</div>`;
+    return;
+  }
+  box.innerHTML=keys.map(k=>{
+    let btns="";
+    if(t.mode==="class"){
+      if(k.granted){
+        btns += `<span style="font-size:12px;color:var(--accent2)">✅ 已领用</span>`;
+        btns += `<button class="btn sm" onclick="useTeamKey(${k.id})">🚀 使用</button>`;
+        if(k.mode==="proxy") btns += `<button class="btn sm ghost" onclick="openVirtualKey(${k.id})">🪪 创建 ks_</button>`;
+      }else{
+        btns += `<button class="btn sm ghost" onclick="grantTeamKey(${k.id})">📥 领用</button>`;
+      }
+      if(t.is_leader) btns += `<button class="btn sm ghost" onclick="openTeamKey(${k.id})">✏️ 编辑</button><button class="btn sm danger" onclick="deleteTeamKey(${k.id})">🗑 删除</button>`;
+    }else{
+      if(k.mode==="direct" && PUBLIC_CONFIG.direct_mode) btns += `<button class="btn sm" onclick="revealTeamKey(${k.id})">🔓 查看密钥</button>`;
+      else{
+        btns += `<button class="btn sm ghost" onclick="useTeamKey(${k.id})">🚀 使用</button>`;
+        btns += `<button class="btn sm ghost" onclick="openVirtualKey(${k.id})">🪪 创建 ks_</button>`;
+      }
+      btns += `<button class="btn sm ghost" onclick="openTeamKey(${k.id})">✏️ 编辑</button><button class="btn sm danger" onclick="deleteTeamKey(${k.id})">🗑 删除</button>`;
+    }
+    return `<div class="kcard">
+      <div class="top"><div class="ic">${catIcon(k.cat)}</div>
+      <div class="nm">${esc(k.name)}<span class="cat">${esc(k.cat||"其他")}</span></div></div>
+      <div class="val"><span>${esc(k.mask)}</span></div>
+      <div class="meta"><span class="exp ok">${t.mode==="class"?"🏫 班级密钥":"🔬 科研密钥"}</span><span class="exp ${k.mode==="direct"?"warn":"ok"}">${k.mode==="direct"?"📤 直接下发":"🔒 仅代调用"}</span>${k.model?`<span>🤖 ${esc(k.model)}</span>`:""}${k.note?`<span>${esc(k.note)}</span>`:""}</div>
+      <div class="ops">${btns}</div>
+    </div>`;
+  }).join("");
+}
+function renderTeamMembers(){
+  const t=currentTeam; if(!t) return;
+  const today=new Date().toISOString().slice(0,10);
+  const members=t.members||[];
+  const pend=members.filter(m=>m.status==="pending").length;
+  const rows=members.map(m=>{
+    const expired = m.expires_at && m.expires_at < today;
+    const st = m.role==="leader" ? '<span style="color:var(--gold)">👑 主管理者</span>'
+      : m.status==="pending" ? '<span style="color:#b8860b">⏳ 待审核</span>'
+      : m.status==="rejected" ? '<span style="color:var(--red)">🚫 已拒绝</span>'
+      : expired ? '<span style="color:var(--red)">⚠ 已过期</span>'
+      : '<span style="color:var(--accent2)">✅ 正常</span>';
+    const expInfo = m.expires_at ? `<span style="color:${expired?"var(--red)":"var(--accent2)"}">${esc(m.expires_at)}${expired?" 已过期":" 到期"}</span>` : '<span style="color:var(--txt3)">长期</span>';
+    let ops="";
+    if(t.is_leader && m.role!=="leader"){
+      if(m.status==="pending") ops=`<button class="btn sm" onclick="approveMember(${m.user_id})">✅ 通过</button><button class="btn sm ghost" onclick="rejectMember(${m.user_id})">❌ 拒绝</button>`;
+      else ops=`<button class="btn sm ghost" onclick="setMemberExpiry(${m.user_id})">⏳ 设到期</button><button class="btn sm danger" onclick="removeMember(${m.user_id})">🚫 移除</button>`;
+    }
+    return `<tr><td>${esc(m.username)}</td><td>${st}</td><td>${expInfo}</td><td style="font-size:12.5px">${esc(m.joined_at)}</td><td>${ops}</td></tr>`;
+  }).join("");
+  $("teamSubMembers").innerHTML=`
+    <div class="toolbar"><span style="color:var(--txt2);font-size:13px">共 <b>${members.length}</b> 位成员${pend?` · <b style="color:#b8860b">${pend} 位待审核</b>`:""}${t.join_code?` · 入队码 <span style="font-family:var(--mono)">${esc(t.join_code)}</span>`:""}</span>
+    ${t.is_leader?`<button class="btn sm" onclick="openAddMember()">➕ 直加成员</button>`:""}</div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>用户名</th><th>身份 / 状态</th><th>有效期</th><th>加入时间</th><th style="width:230px">操作</th></tr></thead>
+      <tbody>${rows||`<tr><td colspan="5" style="text-align:center;color:var(--txt3);padding:26px">暂无成员</td></tr>`}</tbody>
+    </table></div>`;
+}
+function renderTeamUsage(){
+  const u=window._teamUsage||{}, members=u.members||[], s=u.summary||{};
+  $("teamSubUsage").innerHTML=`
+    <div class="grid-stats" style="margin-bottom:18px">
+      <div class="stat"><div class="k">调用总数</div><div class="v">${Number(s.calls||0).toLocaleString()}</div><div class="s">团队成员合计</div></div>
+      <div class="stat"><div class="k">Token 用量</div><div class="v">${Number(s.tokens||0).toLocaleString()}</div><div class="s">厂商返回统计</div></div>
+      <div class="stat"><div class="k">团队密钥</div><div class="v">${u.key_count||0}</div><div class="s">共享资源数量</div></div>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>成员</th><th>调用次数</th><th>成功调用</th><th>Token</th></tr></thead>
+      <tbody>${members.map(m=>`<tr><td>${esc(m.username)}</td><td>${m.calls}</td><td style="color:var(--accent2)">${m.successful}</td><td>${Number(m.tokens).toLocaleString()}</td></tr>`).join("")||`<tr><td colspan="4" style="text-align:center;color:var(--txt3);padding:26px">暂无调用记录</td></tr>`}</tbody>
+    </table></div>`;
+}
+function openTeamKey(kid){
+  editingTeamKey = kid;
+  const k=(window._teamKeys||[]).find(x=>x.id===kid);
+  $("tkTitle").textContent = k ? `✏️ 编辑团队密钥` : "➕ 添加团队密钥";
+  $("tkName").value = k?k.name:"";
+  $("tkCat").value = k?k.cat:"DeepSeek";
+  $("tkNote").value = k?k.note:"";
+  $("tkModel").value = k?k.model:"";
+  $("tkValue").value = "";
+  $("tkValue").placeholder = k?"留空则不修改密钥内容":"sk-xxx...";
+  document.querySelector(`input[name="tkMode"][value="${k?k.mode:"proxy"}"]`).checked = true;
+  $("tkDirectOption").classList.toggle("hidden", !PUBLIC_CONFIG.direct_mode);
+  $("maskTeamKey").classList.remove("hidden");
+  setTimeout(()=>$("tkName").focus(),100);
+}
+async function saveTeamKey(){
+  if(!currentTeam) return;
+  const name=$("tkName").value.trim(), value=$("tkValue").value.trim();
+  const cat=$("tkCat").value||"其他";
+  const mode=document.querySelector('input[name="tkMode"]:checked').value;
+  if(!name) return toast("请填写名称","warn");
+  if(!editingTeamKey && !value) return toast("请填写密钥内容","warn");
+  if(value){
+    const err=validateKeyFormat(cat,value);
+    if(err) return toast("⚠️ 格式不符: "+err,"warn",4200);
+  }
+  const url=`/api/teams/${currentTeam.id}/keys`+(editingTeamKey?`/${editingTeamKey}`:"");
+  const body={name,cat,mode,model:$("tkModel").value.trim(),note:$("tkNote").value.trim()};
+  if(value) body.value=value;
+  const d=await api(url,body,editingTeamKey?"PUT":"POST");
+  if(!d.ok) return toast(d.err||"保存失败","err");
+  closeModal("maskTeamKey");
+  await refreshTeamData(); await refreshAll();
+  toast(editingTeamKey?"✏️ 已保存修改":"✅ 团队密钥已入库");
+}
+async function deleteTeamKey(kid){
+  if(!currentTeam) return;
+  if(!confirm("删除该团队密钥?成员领用将立即回收。")) return;
+  const d=await api(`/api/teams/${currentTeam.id}/keys/${kid}`,{},"DELETE");
+  if(!d.ok) return toast(d.err||"删除失败","err");
+  await refreshTeamData(); await refreshAll();
+  toast("🗑 已删除团队密钥");
+}
+async function grantTeamKey(kid){
+  if(!currentTeam) return;
+  const d=await api(`/api/teams/${currentTeam.id}/keys/${kid}/grant`,{});
+  if(!d.ok) return toast(d.err||"领用失败","warn");
+  await refreshTeamData();
+  toast("📥 已领用!调用时由系统代发,key 不下发到你电脑");
+}
+async function useTeamKey(kid){
+  const k=(window._teamKeys||[]).find(x=>x.id===kid);
+  chatTarget={scope:"team", tid:currentTeam.id, kid};
+  $("chatTitle").textContent=`🚀 安全调用 · ${k?.name||"团队资源"}`;
+  $("chatPrompt").value="";
+  $("chatAnswer").textContent="";
+  $("chatAnswerWrap").classList.add("hidden");
+  $("btnChatSend").disabled=false;
+  $("btnChatSend").textContent="🚀 安全调用";
+  $("maskChat").classList.remove("hidden");
+  setTimeout(()=>$("chatPrompt").focus(),100);
+}
+async function revealTeamKey(kid){
+  const d=await api(`/api/teams/${currentTeam.id}/keys/${kid}/reveal`,{});
+  if(!d.ok) return toast(d.err||"查看失败","err");
+  $("viewValue").textContent=d.value;
+  viewId=null;
+  $("maskView").classList.remove("hidden");
+  toast("📤 真 key 已下发展示(审计已记录)");
+}
+async function approveMember(uid){
+  const d=await api(`/api/teams/${currentTeam.id}/members/${uid}/approve`,{});
+  if(!d.ok) return toast(d.err||"操作失败","warn");
+  toast("✅ 已通过申请"); await refreshTeamDetail();
+}
+async function rejectMember(uid){
+  const d=await api(`/api/teams/${currentTeam.id}/members/${uid}/reject`,{});
+  if(!d.ok) return toast(d.err||"操作失败","warn");
+  toast("🚫 已拒绝申请"); await refreshTeamDetail();
+}
+async function removeMember(uid){
+  if(!confirm("移除该成员?其团队密钥领用将立即回收。")) return;
+  const d=await api(`/api/teams/${currentTeam.id}/members/${uid}/remove`,{});
+  if(!d.ok) return toast(d.err||"移除失败","warn");
+  toast("🚫 已移除成员,领用已回收"); await refreshTeamDetail();
+}
+async function setMemberExpiry(uid){
+  const m=(currentTeam.members||[]).find(x=>x.user_id===uid);
+  const cur=m?.expires_at||"";
+  const v=prompt("设置有效期(YYYY-MM-DD),留空=长期有效:",cur);
+  if(v===null) return;
+  const d=await api(`/api/teams/${currentTeam.id}/members/${uid}/expiry`,{expires_at:v.trim()});
+  if(!d.ok) return toast(d.err||"设置失败","err");
+  toast("⏳ 已更新有效期"+(v.trim()&&v.trim()<new Date().toISOString().slice(0,10)?"(过去日期,领用已回收)":""));
+  await refreshTeamDetail();
+}
+function openAddMember(){
+  $("amUsername").value="";
+  $("amExpires").value="";
+  $("maskAddMember").classList.remove("hidden");
+  setTimeout(()=>$("amUsername").focus(),100);
+}
+async function saveAddMember(){
+  const username=$("amUsername").value.trim(), expires_at=$("amExpires").value;
+  if(!username) return toast("请输入成员用户名","warn");
+  const d=await api(`/api/teams/${currentTeam.id}/members`,{username,expires_at});
+  if(!d.ok) return toast(d.err||"添加失败","err");
+  closeModal("maskAddMember");
+  toast(expires_at?`✅ 已添加成员,有效期至 ${expires_at}`:"✅ 已添加成员(长期有效)");
+  await refreshTeamDetail();
+}
+async function refreshTeamDetail(){
+  const d=await api(`/api/teams/${currentTeam.id}`);
+  if(d.ok){
+    currentTeam=d.team;
+    $("teamJoinCode").textContent=currentTeam.join_code?`🔗 入队码 ${currentTeam.join_code} · 点击复制`:"";
+    $("btnAddTeamKey").classList.toggle("hidden", !(currentTeam.mode==="research" || currentTeam.is_leader));
+    $("btnAddTeamMember").classList.toggle("hidden", !currentTeam.is_leader);
+  }
+  renderTeamMembers();
+  await refreshTeamData();
+}
+
+/* ---------- 用户管理 ---------- */
+async function renderUsers(){
+  const d = await api("/api/users");
+  if(!d.ok) return;
+  window._users = d.users;
+  $("userBody").innerHTML = d.users.map(u=>`
+    <tr><td>${u.id}</td><td>${esc(u.username)}</td>
+    <td><span style="color:${u.role==="admin"?"var(--gold)":"var(--txt2)"}">${u.role==="admin"?"👑 管理员":"👤 教职工"}</span></td>
+    <td style="font-size:12.5px">${u.created}</td>
+    <td>${u.active?'<span style="color:var(--accent2)">✅ 正常</span>':'<span style="color:var(--red)">🚫 已停用</span>'}</td>
+    <td>${u.id!==ME.id?`<button class="btn sm ${u.active?"danger":"ghost"}" onclick="toggleUser(${u.id})">${u.active?"停用":"启用"}</button>
+      <button class="btn sm ghost" onclick="toggleRole(${u.id})">${u.role==="admin"?"降为用户":"升为管理员"}</button>`:"<span style='color:var(--txt3);font-size:12px'>我自己</span>"}</td></tr>`).join("");
+}
+async function toggleUser(uid){
+  const d = await api(`/api/users/${uid}/toggle`, {});
+  if(!d.ok) return toast(d.err||"失败","err");
+  await refreshAll();
+  toast("✅ 已更新用户状态");
+}
+async function toggleRole(uid){
+  const user = (window._users||[]).find(u=>u.id===uid);
+  if(!user) return;
+  const nextRole = user.role==="admin" ? "user" : "admin";
+  const label = nextRole==="admin" ? "授权为管理员" : "撤销管理员权限";
+  if(!confirm(`确定要将「${user.username}」${label}吗？此操作会写入审计日志。`)) return;
+  const currentPassword = prompt("安全确认：请输入你当前的管理员密码");
+  if(currentPassword===null || !currentPassword) return;
+  let emailCode="";
+  if(PUBLIC_CONFIG.email_step_up && ME.email_verified){
+    const sent=await sendStepupEmail(); if(!sent) return;
+    emailCode=prompt("敏感操作二次确认：请输入邮箱验证码",typeof sent==="string"?sent:"")||"";
+    if(!emailCode) return;
+  }
+  const d = await api(`/api/users/${uid}/role`, {role:nextRole, current_password:currentPassword, email_code:emailCode});
+  if(!d.ok) return toast(d.err||"角色更新失败","err");
+  await refreshAll();
+  toast("✅ "+d.msg);
+}
+
+async function createInvitation(){
+  const hoursRaw=prompt("邀请码有效多少小时？（1-168）","24");
+  if(hoursRaw===null) return;
+  const usesRaw=prompt("最多允许几人注册？（建议 1 人 1 码）","1");
+  if(usesRaw===null) return;
+  const hours=Number(hoursRaw), maxUses=Number(usesRaw);
+  if(!Number.isInteger(hours)||hours<1||hours>168||!Number.isInteger(maxUses)||maxUses<1||maxUses>100)
+    return toast("请输入有效范围内的整数","warn");
+  const d=await api("/api/invitations",{hours,max_uses:maxUses});
+  if(!d.ok) return toast(d.err||"邀请码生成失败","err");
+  $("inviteValue").textContent=d.invitation;
+  $("inviteMeta").textContent=`有效至 ${d.expires} · 最多 ${d.max_uses} 人使用 · 仅本次显示`;
+  $("maskInvite").classList.remove("hidden");
+}
+async function copyInvitation(){
+  await copySensitive($("inviteValue").textContent,"邀请码",30);
+}
+
+/* ---------- 演示数据 ---------- */
+async function loadDemo(){
+  const d = await api("/api/demo", {});
+  if(!d.ok) return toast(d.err||"失败","err");
+  await refreshAll();
+  toast("✨ 已载入 5 条演示密钥(虚构)");
+}
+
+/* ---------- 启动 ---------- */
+document.addEventListener("DOMContentLoaded", async ()=>{
+  initLandingMotion();
+  const shieldSVG = `<svg viewBox="0 0 48 48" width="100%" height="100%" fill="none"><path d="M24 3 42 10v13c0 11.2-7.5 19.3-18 22C13.5 42.3 6 34.2 6 23V10L24 3z" fill="#0f2b33" stroke="#22d3a7" stroke-width="2"/><path d="M24 12l6.5 3.6v5.4c0 4.9-2.7 8.4-6.5 10.6-3.8-2.2-6.5-5.7-6.5-10.6v-5.4L24 12z" stroke="#5eead4" stroke-width="1.6" fill="#22d3a722"/><circle cx="24" cy="22" r="2.3" fill="#5eead4"/></svg>`;
+  $("logo").innerHTML = shieldSVG;
+  $("fPwd").addEventListener("keydown", e=>{ if(e.key==="Enter") doLogin(); });
+  $("rPwd").addEventListener("keydown", e=>{ if(e.key==="Enter") doRegister(); });
+  const providerModels={"DeepSeek":"deepseek-v4-flash","OpenAI":"gpt-5-mini","通义千问":"qwen-plus","Kimi":"kimi-k2.5","智谱清言":"glm-5.2","硅基流动":"Pro/zai-org/GLM-4.7"};
+  $("sCat").addEventListener("change",()=>{$("sModel").value=providerModels[$("sCat").value]||"";});
+  $("tkCat").innerHTML=$("sCat").innerHTML;
+  $("tkCat").addEventListener("change",()=>{$("tkModel").value=providerModels[$("tkCat").value]||"";});
+  const config=await api("/api/public-config");
+  if(config.ok) PUBLIC_CONFIG=config;
+  applyPublicConfig();
+  try{ const d = await api("/api/me"); if(d.ok) await enterMain(); }catch(e){ /* 未登录 */ }
+});
+</script>
+</body>
+</html>

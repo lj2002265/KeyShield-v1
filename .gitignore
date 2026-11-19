@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.db
+*.db-*
+*.sqlite*
+.site_key
+.flask_secret
+.audit_anchor
+.env
+.env.*
+backups/
+*.log
+.DS_Store
+Thumbs.db
