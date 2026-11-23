@@ -3,6 +3,19 @@
 校园 AI 密钥安全管理平台，面向评审提供可在本地复现的 Demo 源码。
 本仓库发布原版服务端（内部版本 v3.3），不包含后续 KeyShield-Agent 扩展版。
 
+## 直接下载安装程序、方案书和 Demo
+
+**[打开 v1.0.1 完整交付发布页](https://github.com/lj2002265/KeyShield-v1/releases/tag/v1.0.1)**
+
+| 交付物 | 下载与说明 |
+|---|---|
+| Windows 安装程序 | [免装 Python 的 x64 安装程序](https://github.com/lj2002265/KeyShield-v1/releases/download/v1.0.1/KeyShield-Setup-v1.0.1-windows-x64.exe) · [安装说明](docs/INSTALL.md) |
+| 可运行 Demo | [Windows 便携 Demo](https://github.com/lj2002265/KeyShield-v1/releases/download/v1.0.1/KeyShield-Demo-v1.0.1-windows-x64.zip) · [源码 Demo](https://github.com/lj2002265/KeyShield-v1/releases/download/v1.0.1/KeyShield-Source-Demo-v1.0.1.zip) · [演示说明](docs/DEMO.md) |
+| 方案书 | [18 页方案书 PDF](https://github.com/lj2002265/KeyShield-v1/releases/download/v1.0.1/KeyShield-Proposal-v1.0.pdf) · [阅读说明](docs/SOLUTION.md) |
+| 三类交付说明 | [PDF 下载](https://github.com/lj2002265/KeyShield-v1/releases/download/v1.0.1/KeyShield-Delivery-Guides-v1.0.1.pdf) |
+
+桌面程序仅提供本机演示，数据与程序分开保存，不附带默认账号。源码安装和公网部署方法见下文。构建 Windows 程序可安装 `requirements-lock.txt`、`requirements-build.txt` 后执行 `python build_windows.py`。
+
 ## 环境与安装
 
 需要 Python 3.10 或以上版本，首次安装依赖需要联网。下载本仓库 ZIP 并解压，或使用 Git 克隆，然后在源码目录打开终端。

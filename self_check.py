@@ -6,7 +6,7 @@ import json, urllib.request, urllib.error, http.cookiejar, sys, io, time, sqlite
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 BASE = os.environ.get("KEYSHIELD_BASE_URL", "http://127.0.0.1:8800").rstrip("/")
 HERE = os.path.dirname(os.path.abspath(__file__))
-DB = os.path.join(HERE, "keyshield.db")
+DB = os.path.join(os.environ.get("KEYSHIELD_DATA_DIR", HERE), "keyshield.db")
 
 ts = str(int(time.time()))[-6:]
 ADMIN = f"check_admin_{ts}"
